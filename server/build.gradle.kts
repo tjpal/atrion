@@ -18,12 +18,11 @@ application {
 dependencies {
     implementation(projects.shared)
     implementation(libs.logback)
-    implementation(libs.ktor.serverCore)
-    implementation(libs.ktor.serverNetty)
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.cio)
 
     implementation(libs.dagger)
     kapt(libs.kapt.dagger)
 
-    testImplementation(libs.ktor.serverTestHost)
     testImplementation(libs.kotlin.testJunit)
 }
