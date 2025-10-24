@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kapt)
+    alias(libs.plugins.kotlinxSerialization)
 
     application
 }
@@ -23,6 +24,8 @@ dependencies {
 
     implementation(libs.dagger)
     kapt(libs.kapt.dagger)
+
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.kotlin.testJunit)
 }
