@@ -19,8 +19,11 @@ application {
 dependencies {
     implementation(projects.shared)
     implementation(libs.logback)
+
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
+    implementation(libs.ktor.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
 
     implementation(libs.dagger)
     kapt(libs.kapt.dagger)
@@ -28,4 +31,5 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.kotlin.testJunit)
+    testImplementation(libs.mockk)
 }
