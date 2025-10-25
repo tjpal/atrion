@@ -1,53 +1,57 @@
 package dev.tjpal.graph
 
-import dev.tjpal.graph.model.GraphDefinition
+import dev.tjpal.graph.model.GraphExecutionStatus
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-class GraphDefinitionRepositoryTest {
-    private lateinit var repo: GraphDefinitionRepository
+class ActiveGraphRepositoryTest {
+    private lateinit var repo: ActiveGraphRepository
 
     @BeforeTest
     fun setUp() {
-        repo = GraphDefinitionRepository()
+        repo = ActiveGraphRepository()
     }
 
     @Test
-    fun `adding a new graph returns an id and it can be retrieved`() {
-        val graph = GraphDefinition(projectId = "proj-1", nodes = emptyList(), edges = emptyList())
-        val id = repo.add(graph)
+    fun `starting a new execution returns an id and it can be retrieved`() {
+        val graphId = "proj-1"
+        val id = repo.start(graphId)
 
         assertTrue(id.isNotBlank())
 
         val retrieved = repo.get(id)
 
         assertEquals(id, retrieved.id)
-        assertEquals(graph.projectId, retrieved.projectId)
-        assertEquals(graph.nodes, retrieved.nodes)
-        assertEquals(graph.edges, retrieved.edges)
+        assertEquals(graphId, retrieved.graphId)
+
+        val exec: GraphExecutionStatus = retrieved.getExecutionStatus()
+
+        assertEquals(id, exec.id)
+        assertEquals(graphId, exec.graphId)
+        assertEquals(emptyList<Any>(), exec.nodeExecutionStates)
     }
 
     @Test
-    fun `retrieving non-existing graph throws`() {
+    fun `retrieving non-existing execution throws`() {
         assertFailsWith<IllegalArgumentException> {
             repo.get("does-not-exist")
         }
     }
 
     @Test
-    fun `deleting non-existing graph throws`() {
+    fun `deleting non-existing execution throws`() {
         assertFailsWith<IllegalArgumentException> {
             repo.delete("does-not-exist")
         }
     }
 
     @Test
-    fun `deleting existing graph removes it`() {
-        val graph = GraphDefinition(projectId = "proj-2", nodes = emptyList(), edges = emptyList())
-        val id = repo.add(graph)
+    fun `deleting existing execution removes it`() {
+        val graphId = "proj-2"
+        val id = repo.start(graphId)
 
         // ensure exists and then delete
         val retrieved = repo.get(id)

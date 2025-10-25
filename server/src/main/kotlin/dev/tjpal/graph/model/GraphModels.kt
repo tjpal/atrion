@@ -48,7 +48,7 @@ data class NodeExecutionState(
 )
 
 @Serializable
-data class GraphExecution(
+data class GraphExecutionStatus(
     val id: String,
     val graphId: String,
     val nodeExecutionStates: List<NodeExecutionState>

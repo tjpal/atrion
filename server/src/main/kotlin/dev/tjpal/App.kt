@@ -1,6 +1,7 @@
 package dev.tjpal
 
 import dev.tjpal.config.Config
+import dev.tjpal.graph.ActiveGraphRepository
 import dev.tjpal.graph.GraphDefinitionRepository
 import dev.tjpal.nodes.NodeRepository
 import io.ktor.serialization.kotlinx.json.json
@@ -28,12 +29,14 @@ import javax.inject.Inject
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.Serializable
 import dev.tjpal.graph.model.GraphDefinition
 
 class App @Inject constructor(
     private val config: Config,
     private val nodeRepository: NodeRepository,
-    private val graphRepository: GraphDefinitionRepository
+    private val graphRepository: GraphDefinitionRepository,
+    private val activeGraphRepository: ActiveGraphRepository
 ) {
     fun run() {
         val server = configureServer(config)
@@ -54,7 +57,7 @@ class App @Inject constructor(
                     }
                 }
             },
-            module = { module(nodeRepository, graphRepository) }
+            module = { module(nodeRepository, graphRepository, activeGraphRepository) }
         )
 
         return server
@@ -75,7 +78,10 @@ class App @Inject constructor(
     }
 }
 
-fun Application.module(nodeRepository: NodeRepository, graphRepository: GraphDefinitionRepository) {
+@Serializable
+private data class ExecutionStartRequest(val graphId: String)
+
+fun Application.module(nodeRepository: NodeRepository, graphRepository: GraphDefinitionRepository, activeGraphRepository: ActiveGraphRepository) {
     val defaultJson = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -134,6 +140,48 @@ fun Application.module(nodeRepository: NodeRepository, graphRepository: GraphDef
 
                 try {
                     graphRepository.delete(id)
+                    call.respond(HttpStatusCode.NoContent)
+                } catch (e: IllegalArgumentException) {
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to (e.message ?: "not found")))
+                }
+            }
+        }
+
+        route("/executions") {
+            get {
+                call.respond(activeGraphRepository.listAll())
+            }
+
+            post {
+                try {
+                    val req = call.receive<ExecutionStartRequest>()
+
+                    try {
+                        graphRepository.get(req.graphId)
+                    } catch (e: IllegalArgumentException) {
+                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Graph with id ${req.graphId} does not exist"))
+                        return@post
+                    }
+
+                    val executionId = activeGraphRepository.start(req.graphId)
+
+                    val created = mapOf("id" to executionId, "executionId" to req.graphId)
+                    call.respond(HttpStatusCode.Created, created)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "invalid request")))
+                }
+            }
+
+            delete("/{id}") {
+                val id = call.parameters["id"]
+
+                if (id.isNullOrBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing execution id"))
+                    return@delete
+                }
+
+                try {
+                    activeGraphRepository.delete(id)
                     call.respond(HttpStatusCode.NoContent)
                 } catch (e: IllegalArgumentException) {
                     call.respond(HttpStatusCode.NotFound, mapOf("error" to (e.message ?: "not found")))
