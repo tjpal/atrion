@@ -1,0 +1,37 @@
+{
+  "projectId": "example-project",
+  "nodes": [
+    {
+      "id": "rest1",
+      "definitionName": "rest_input",
+      "parametersJson": "{}",
+      "position": { "x": 100, "y": 100 }
+    },
+    {
+      "id": "llm1",
+      "definitionName": "llm_processor",
+      "parametersJson": "{}",
+      "position": { "x": 300, "y": 100 }
+    },
+    {
+      "id": "out1",
+      "definitionName": "sync_output",
+      "parametersJson": "{}",
+      "position": { "x": 500, "y": 100 }
+    }
+  ],
+  "edges": [
+    {
+      "fromNodeId": "rest1",
+      "toNodeId": "llm1",
+      "fromConnectorId": "out",
+      "toConnectorId": "in"
+    },
+    {
+      "fromNodeId": "llm1",
+      "toNodeId": "out1",
+      "fromConnectorId": "text_out",
+      "toConnectorId": "in"
+    }
+  ]
+}
