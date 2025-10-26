@@ -1,6 +1,7 @@
 package dev.tjpal.graph
 
 import dev.tjpal.graph.model.GraphExecutionStatus
+import io.mockk.mockk
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -12,7 +13,7 @@ class ActiveGraphRepositoryTest {
 
     @BeforeTest
     fun setUp() {
-        repo = ActiveGraphRepository()
+        repo = ActiveGraphRepository(mockk())
     }
 
     @Test

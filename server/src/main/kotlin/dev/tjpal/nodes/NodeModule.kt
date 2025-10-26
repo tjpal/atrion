@@ -1,15 +1,13 @@
 package dev.tjpal.nodes
 
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.multibindings.IntoMap
 
 @Module
-class NodeModule {
-    @Provides
+abstract class NodeModule {
+    @Binds
     @IntoMap
     @NodeFactoryKey("test")
-    fun providesTestNodeFactory(): NodeFactory {
-        return TestNodeFactory()
-    }
+    abstract fun bindTestNodeFactory(factory: TestNodeFactory): NodeFactory
 }

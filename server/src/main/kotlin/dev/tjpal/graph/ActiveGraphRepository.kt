@@ -6,16 +6,19 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * In-memory thread-safe repository for ActiveGraph objects.
+ * In-memory thread-safe repository for active graphs.
  */
 @Singleton
-class ActiveGraphRepository @Inject constructor() {
+class ActiveGraphRepository @Inject constructor(
+    private val activeGraphFactory: ActiveGraphFactory
+) {
     private val activeGraphs: ConcurrentHashMap<String, ActiveGraph> = ConcurrentHashMap()
 
     fun start(graphId: String): String {
         val id = UUID.randomUUID().toString()
-        val graph = ActiveGraph(id = id, graphId = graphId)
+        val graph = activeGraphFactory.create(id, graphId)
 
+        graph.activate()
         activeGraphs[id] = graph
 
         return id
@@ -26,7 +29,12 @@ class ActiveGraphRepository @Inject constructor() {
     }
 
     fun delete(id: String) {
-        activeGraphs.remove(id) ?: throw IllegalArgumentException("No active execution with id: $id")
+        val graph = activeGraphs.remove(id) ?: throw IllegalArgumentException("No active execution with id: $id")
+        try {
+            graph.stop()
+        } catch (e: Exception) {
+            // Ignore cleanup errors. Can't act on them.
+        }
     }
 
     fun listAll(): List<ActiveGraph> = activeGraphs.values.toList()

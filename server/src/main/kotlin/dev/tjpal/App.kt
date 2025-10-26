@@ -3,9 +3,11 @@ package dev.tjpal
 import dev.tjpal.api.route.definitionsRoute
 import dev.tjpal.api.route.graphsRoute
 import dev.tjpal.api.route.executionsRoute
+import dev.tjpal.api.route.restInputRoutes
 import dev.tjpal.config.Config
 import dev.tjpal.graph.ActiveGraphRepository
 import dev.tjpal.graph.GraphDefinitionRepository
+import dev.tjpal.graph.hooks.RestInputRegistry
 import dev.tjpal.nodes.NodeRepository
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -19,6 +21,8 @@ import io.ktor.server.engine.connector
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
+import java.nio.file.Files.createDirectories
+import java.nio.file.Files.delete
 import java.nio.file.Paths
 import javax.inject.Inject
 import kotlin.io.path.exists
@@ -29,7 +33,8 @@ class App @Inject constructor(
     private val config: Config,
     private val nodeRepository: NodeRepository,
     private val graphRepository: GraphDefinitionRepository,
-    private val activeGraphRepository: ActiveGraphRepository
+    private val activeGraphRepository: ActiveGraphRepository,
+    private val restInputRegistry: RestInputRegistry
 ) {
     fun run() {
         val server = configureServer(config)
@@ -50,7 +55,7 @@ class App @Inject constructor(
                     }
                 }
             },
-            module = { module(nodeRepository, graphRepository, activeGraphRepository) }
+            module = { module(nodeRepository, graphRepository, activeGraphRepository, restInputRegistry) }
         )
 
         return server
@@ -71,7 +76,12 @@ class App @Inject constructor(
     }
 }
 
-fun Application.module(nodeRepository: NodeRepository, graphRepository: GraphDefinitionRepository, activeGraphRepository: ActiveGraphRepository) {
+fun Application.module(
+    nodeRepository: NodeRepository,
+    graphRepository: GraphDefinitionRepository,
+    activeGraphRepository: ActiveGraphRepository,
+    restInputRegistry: RestInputRegistry
+) {
     val defaultJson = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -86,5 +96,6 @@ fun Application.module(nodeRepository: NodeRepository, graphRepository: GraphDef
         definitionsRoute(nodeRepository)
         graphsRoute(graphRepository)
         executionsRoute(graphRepository, activeGraphRepository)
+        restInputRoutes(restInputRegistry)
     }
 }

@@ -2,9 +2,10 @@ package dev.tjpal.nodes
 
 import dev.tjpal.graph.model.NodeDefinition
 import dev.tjpal.graph.model.NodeType
+import javax.inject.Inject
 
 @NodeFactoryKey(value = "test")
-class TestNodeFactory() : NodeFactory {
+class TestNodeFactory @Inject constructor() : NodeFactory {
     override fun definition(): NodeDefinition {
         return NodeDefinition(
             name = "Test Node",
@@ -21,6 +22,16 @@ class TestNodeFactory() : NodeFactory {
     }
 
     override fun createNode(parametersJson: String): Node {
-        TODO("Not yet implemented")
+        return object : Node {
+            override fun onActivate(context: NodeActivationContext) {
+            }
+
+            override suspend fun onEvent(payload: String, output: NodeOutput) {
+                println("TestNode received payload: $payload")
+            }
+
+            override fun onStop() {
+            }
+        }
     }
 }
