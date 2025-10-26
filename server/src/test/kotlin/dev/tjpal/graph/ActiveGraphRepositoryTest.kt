@@ -1,6 +1,7 @@
 package dev.tjpal.graph
 
 import dev.tjpal.graph.model.GraphExecutionStatus
+import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -11,9 +12,22 @@ import kotlin.test.assertTrue
 class ActiveGraphRepositoryTest {
     private lateinit var repo: ActiveGraphRepository
 
+    private val factory = mockk<ActiveGraphFactory>()
+
     @BeforeTest
     fun setUp() {
-        repo = ActiveGraphRepository(mockk())
+        every { factory.create(any(), any()) } answers {
+            val id: String = arg(0)
+            val graphId: String = arg(1)
+
+            mockk<ActiveGraph>(relaxed = true) {
+                every { this@mockk.id } returns id
+                every { this@mockk.graphId } returns graphId
+                every { getExecutionStatus() } returns GraphExecutionStatus(id, graphId, emptyList())
+            }
+        }
+
+        repo = ActiveGraphRepository(factory)
     }
 
     @Test

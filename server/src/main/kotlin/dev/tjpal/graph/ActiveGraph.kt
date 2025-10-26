@@ -2,11 +2,13 @@ package dev.tjpal.graph
 
 import dev.tjpal.graph.model.GraphDefinition
 import dev.tjpal.graph.model.GraphExecutionStatus
-import dev.tjpal.graph.model.NodeInstance
 import dev.tjpal.nodes.Node
 import dev.tjpal.nodes.NodeActivationContext
 import dev.tjpal.nodes.NodeOutput
 import dev.tjpal.nodes.NodeRepository
+import dev.tjpal.graph.model.NodeInstance
+import dev.tjpal.nodes.NodeDeactivationContext
+import dev.tjpal.nodes.NodeInvocationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -77,11 +79,14 @@ class ActiveGraph(
                     nodeDef.definitionName,
                     nodeDef.parametersJson
                 )
+
                 val context = NodeActivationContext(
                     executionId = id,
                     nodeId = nodeDef.id,
-                    parametersJson = nodeDef.parametersJson
+                    parametersJson = nodeDef.parametersJson,
+                    graph = this
                 )
+
                 nodeInstance.onActivate(context)
             } catch (e: Exception) {
                 println("Error activating node ${nodeDef.id}: ${e.message}")
@@ -98,18 +103,34 @@ class ActiveGraph(
         mailboxes.clear()
 
         scope.cancel()
+
+        callStopOnNodes()
+    }
+
+    private fun callStopOnNodes() {
+        for (nodeDef in graphDefinition.nodes) {
+            try {
+                val nodeInstance = nodeRepository.createNodeInstance(
+                    nodeDef.definitionName,
+                    nodeDef.parametersJson
+                )
+
+                val context = NodeDeactivationContext(
+                    executionId = id,
+                    nodeId = nodeDef.id
+                )
+
+                nodeInstance.onStop(context)
+            } catch (e: Exception) {
+                println("Error stopping node ${nodeDef.id}: ${e.message}")
+            }
+        }
     }
 
     private fun cancelAndStopRuntimeWorkers() {
         for ((_, holder) in runtimeNodes.entries) {
             try {
                 holder.workerJob.cancel()
-            } catch (e: Exception) {
-                // Ignored. Cannot be acted upon.
-            }
-
-            try {
-                holder.node.onStop()
             } catch (e: Exception) {
                 // Ignored. Cannot be acted upon.
             }
@@ -138,32 +159,38 @@ class ActiveGraph(
     }
 
     private fun scheduleNode(nodeId: String) {
-        runtimeNodes.computeIfAbsent(nodeId) { key ->
-            val job = scope.launch {
-                processMailboxLoop(key)
-            }
+        // if worker already present, nothing to do
+        if (runtimeNodes.containsKey(nodeId)) return
 
-            val nodeDefinition = getNodeDefinition(nodeId)
-            val nodeInstance = nodeRepository.createNodeInstance(
-                nodeDefinition.definitionName,
-                nodeDefinition.parametersJson
-            )
+        // create node instance and launch worker, but try to ensure we only create one holder
+        val nodeDefinition = getNodeDefinition(nodeId)
+        val nodeInstance = nodeRepository.createNodeInstance(
+            nodeDefinition.definitionName,
+            nodeDefinition.parametersJson
+        )
 
-            NodeRuntimeHolder(node = nodeInstance, workerJob = job)
+        val job = scope.launch {
+            processMailboxLoop(nodeId, nodeInstance)
+        }
+
+        val holder = NodeRuntimeHolder(node = nodeInstance, workerJob = job)
+        val prev = runtimeNodes.putIfAbsent(nodeId, holder)
+        if (prev != null) {
+            // someone else created the runtime. cancel our job and let the other worker run
+            job.cancel()
         }
     }
 
     private fun getNodeDefinition(nodeId: String): NodeInstance {
         return graphDefinition.nodes.find { it.id == nodeId }
-            ?: throw IllegalArgumentException("No node definition found for nodeId=$nodeId")
+            ?: throw IllegalStateException("Node definition not found for nodeId=$nodeId")
     }
 
     /**
      * Process messages for a given nodeId. This method runs in a coroutine.
      */
-    private suspend fun processMailboxLoop(nodeId: String) {
+    private suspend fun processMailboxLoop(nodeId: String, nodeInstance: Node) {
         val mailBox = mailboxes[nodeId] ?: throw IllegalStateException("Mailbox not found for nodeId=$nodeId")
-        val nodeInstance = runtimeNodes[nodeId]?.node ?: throw IllegalStateException("Node instance not found for nodeId=$nodeId")
 
         try {
             while (true) {
@@ -181,7 +208,13 @@ class ActiveGraph(
                 }
 
                 // Deliver the payload to the node instance
-                nodeInstance.onEvent(message.payload, output)
+                val nodeInvocationContext = NodeInvocationContext(
+                    executionId = id,
+                    nodeId = nodeId,
+                    payload = message.payload
+                )
+
+                nodeInstance.onEvent(nodeInvocationContext, output)
             }
         } finally {
             runtimeNodes.remove(nodeId)

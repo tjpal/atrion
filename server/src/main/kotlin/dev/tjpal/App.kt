@@ -4,8 +4,10 @@ import dev.tjpal.api.route.definitionsRoute
 import dev.tjpal.api.route.graphsRoute
 import dev.tjpal.api.route.executionsRoute
 import dev.tjpal.api.route.restInputRoutes
+import dev.tjpal.api.route.outputsRoute
 import dev.tjpal.config.Config
 import dev.tjpal.graph.ActiveGraphRepository
+import dev.tjpal.graph.ExecutionOutputStore
 import dev.tjpal.graph.GraphDefinitionRepository
 import dev.tjpal.graph.hooks.RestInputRegistry
 import dev.tjpal.nodes.NodeRepository
@@ -34,7 +36,8 @@ class App @Inject constructor(
     private val nodeRepository: NodeRepository,
     private val graphRepository: GraphDefinitionRepository,
     private val activeGraphRepository: ActiveGraphRepository,
-    private val restInputRegistry: RestInputRegistry
+    private val restInputRegistry: RestInputRegistry,
+    private val executionOutputStore: ExecutionOutputStore
 ) {
     fun run() {
         val server = configureServer(config)
@@ -55,7 +58,7 @@ class App @Inject constructor(
                     }
                 }
             },
-            module = { module(nodeRepository, graphRepository, activeGraphRepository, restInputRegistry) }
+            module = { module(nodeRepository, graphRepository, activeGraphRepository, restInputRegistry, executionOutputStore) }
         )
 
         return server
@@ -66,12 +69,12 @@ class App @Inject constructor(
 
         // Cleanup any stale socket file
         if (socketPath.exists() && socketPath.isRegularFile()) {
-            java.nio.file.Files.delete(socketPath)
+            delete(socketPath)
         }
 
         // Ensure parent directories exist
         if (!socketPath.parent.exists()) {
-            java.nio.file.Files.createDirectories(socketPath.parent)
+            createDirectories(socketPath.parent)
         }
     }
 }
@@ -80,7 +83,8 @@ fun Application.module(
     nodeRepository: NodeRepository,
     graphRepository: GraphDefinitionRepository,
     activeGraphRepository: ActiveGraphRepository,
-    restInputRegistry: RestInputRegistry
+    restInputRegistry: RestInputRegistry,
+    executionOutputStore: ExecutionOutputStore
 ) {
     val defaultJson = Json {
         prettyPrint = true
@@ -97,5 +101,6 @@ fun Application.module(
         graphsRoute(graphRepository)
         executionsRoute(graphRepository, activeGraphRepository)
         restInputRoutes(restInputRegistry)
+        outputsRoute(executionOutputStore)
     }
 }

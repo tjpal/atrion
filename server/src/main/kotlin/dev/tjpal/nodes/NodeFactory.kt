@@ -1,5 +1,8 @@
 package dev.tjpal.nodes
 
+import dev.tjpal.graph.ActiveGraph
+import dev.tjpal.graph.model.NodeDefinition
+
 interface NodeFactory {
     // Provides the static definition that describes the node
     fun definition(): dev.tjpal.graph.model.NodeDefinition
@@ -14,17 +17,30 @@ interface Node {
     fun onActivate(context: NodeActivationContext)
 
     // Called when a message is delivered to this node for processing.
-    suspend fun onEvent(payload: String, output: NodeOutput)
+    suspend fun onEvent(context: NodeInvocationContext, output: NodeOutput)
 
     // Called when the graph execution stops or when the node is removed; used to unregister hooks and cleanup.
-    fun onStop()
+    fun onStop(context: NodeDeactivationContext)
 }
 
 // Context passed to nodes during activation
+// Includes reference to the ActiveGraph so nodes can create callbacks that forward incoming REST events to the graph.
 data class NodeActivationContext(
     val executionId: String,
     val nodeId: String,
     val parametersJson: String,
+    val graph: ActiveGraph
+)
+
+data class NodeInvocationContext(
+    val executionId: String,
+    val nodeId: String,
+    val payload: String
+)
+
+data class NodeDeactivationContext(
+    val executionId: String,
+    val nodeId: String
 )
 
 // Node output interface used by nodes to send outputs back to the graph. Will be implemented by the ActiveGraph

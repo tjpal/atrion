@@ -8,6 +8,16 @@ import dagger.multibindings.IntoMap
 abstract class NodeModule {
     @Binds
     @IntoMap
-    @NodeFactoryKey("test")
-    abstract fun bindTestNodeFactory(factory: TestNodeFactory): NodeFactory
+    @NodeFactoryKey("rest_input")
+    abstract fun bindRestInputNodeFactory(factory: RestInputNodeFactory): NodeFactory
+
+    @Binds
+    @IntoMap
+    @NodeFactoryKey("llm_processor")
+    abstract fun bindLLMProcessingNodeFactory(factory: LLMProcessingNodeFactory): NodeFactory
+
+    @Binds
+    @IntoMap
+    @NodeFactoryKey("sync_output")
+    abstract fun bindOutputSinkNodeFactory(factory: OutputSinkNodeFactory): NodeFactory
 }

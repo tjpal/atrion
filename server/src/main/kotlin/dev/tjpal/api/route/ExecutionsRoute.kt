@@ -34,7 +34,7 @@ fun Routing.executionsRoute(graphRepository: GraphDefinitionRepository, activeGr
 
                 val executionId = activeGraphRepository.start(req.graphId)
 
-                val created = mapOf("id" to executionId, "executionId" to req.graphId)
+                val created = mapOf("executionId" to executionId)
                 call.respond(HttpStatusCode.Created, created)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "invalid request")))
