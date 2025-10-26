@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kapt)
     alias(libs.plugins.kotlinxSerialization)
 
+    jacoco
     application
 }
 
@@ -32,4 +33,15 @@ dependencies {
 
     testImplementation(libs.kotlin.testJunit)
     testImplementation(libs.mockk)
+}
+
+jacoco {
+    toolVersion = "0.8.13"
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
 }
