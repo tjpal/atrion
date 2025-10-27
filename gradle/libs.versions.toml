@@ -32,6 +32,8 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kapt-dagger = { module = "com.google.dagger:dagger-compiler", version.ref = "kapt-dagger" }
 dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
 
+openai = { group = "com.openai", name = "openai-java", version = "3.6.0" }
+
 [plugins]
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }

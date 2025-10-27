@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class Config(
     val httpHost: String,
     val httpPort: Int,
-    val udsPath: String
+    val udsPath: String,
+    val openAICredentialPath: String
 )

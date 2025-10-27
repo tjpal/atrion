@@ -12,7 +12,8 @@ class ConfigLoader @Inject constructor(
     private val default = Config(
         httpHost = "0.0.0.0",
         httpPort = 8081,
-        udsPath = "/tmp/atrion.socket"
+        udsPath = "/tmp/atrion.socket",
+        openAICredentialPath = "${System.getProperty("user.home")}/.atrion/cred"
     )
 
     fun loadOrCreate(): Config {

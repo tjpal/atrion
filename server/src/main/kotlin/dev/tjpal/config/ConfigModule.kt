@@ -8,7 +8,6 @@ import javax.inject.Singleton
 
 @Module
 class ConfigModule {
-
     @Provides
     @Singleton
     fun providesJson(): Json = Json { ignoreUnknownKeys = true; prettyPrint = true }

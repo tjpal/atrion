@@ -31,6 +31,8 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
+    implementation(libs.openai)
+
     testImplementation(libs.kotlin.testJunit)
     testImplementation(libs.mockk)
 }

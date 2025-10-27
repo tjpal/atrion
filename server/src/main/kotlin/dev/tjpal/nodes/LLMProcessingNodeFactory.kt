@@ -1,5 +1,6 @@
 package dev.tjpal.nodes
 
+import dev.tjpal.ai.LLM
 import dev.tjpal.graph.model.ConnectorDefinition
 import dev.tjpal.graph.model.ConnectorSchema
 import dev.tjpal.graph.model.NodeDefinition
@@ -7,7 +8,7 @@ import dev.tjpal.graph.model.NodeType
 import javax.inject.Inject
 
 @NodeFactoryKey(value = "llm_processor")
-class LLMProcessingNodeFactory @Inject constructor() : NodeFactory {
+class LLMProcessingNodeFactory @Inject constructor(private val llm: LLM) : NodeFactory {
     override fun definition(): NodeDefinition {
         return NodeDefinition(
             name = "LLM Processor",
@@ -24,6 +25,6 @@ class LLMProcessingNodeFactory @Inject constructor() : NodeFactory {
     }
 
     override fun createNode(parametersJson: String): Node {
-        return LLMProcessingNode(parametersJson)
+        return LLMProcessingNode(parametersJson, llm)
     }
 }

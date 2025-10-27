@@ -1,0 +1,60 @@
+package dev.tjpal.ai.openai
+
+import com.openai.client.OpenAIClient
+import com.openai.client.okhttp.OpenAIOkHttpClient
+import com.openai.models.audio.AudioModel
+import com.openai.models.audio.transcriptions.TranscriptionCreateParams
+import dev.tjpal.ai.LLM
+import dev.tjpal.ai.RequestResponseChain
+import dev.tjpal.config.Config
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Paths
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.io.path.Path
+
+@Singleton
+class OpenAILLM @Inject constructor(private val config: Config) : LLM {
+    private val client = buildClientFromFile()
+
+    private fun buildClientFromFile(): OpenAIClient {
+        try {
+            val key = Files.readString(Paths.get(config.openAICredentialPath)).trim { it <= ' ' }
+
+            return OpenAIOkHttpClient.builder().apiKey(key).build()
+        } catch (e: IOException) {
+            throw IllegalStateException("Failed to read OpenAI API key from ${config.openAICredentialPath}", e)
+        }
+    }
+
+    override fun createResponseRequestChain(): RequestResponseChain {
+        val result = OpenAIRequestResponseChain(client)
+        result.create()
+
+        return result
+    }
+
+    override fun transcriptAudio(filePath: String): String {
+        val vadConfig = TranscriptionCreateParams.ChunkingStrategy.VadConfig.builder().
+            type(TranscriptionCreateParams.ChunkingStrategy.VadConfig.Type.SERVER_VAD).
+            silenceDurationMs(5000).
+            threshold(0.0).
+            build()
+
+        val createParams: TranscriptionCreateParams = TranscriptionCreateParams.builder().
+            file(Path(filePath)).
+            model(AudioModel.Companion.GPT_4O_MINI_TRANSCRIBE).
+            chunkingStrategy(vadConfig).
+            build()
+
+        val transcriptionResponse = client.
+            audio().
+            transcriptions().
+            create(createParams)
+
+        val transcription = transcriptionResponse.asTranscription()
+
+        return transcription.text()
+    }
+}
