@@ -159,25 +159,18 @@ class ActiveGraph(
     }
 
     private fun scheduleNode(nodeId: String) {
-        // if worker already present, nothing to do
-        if (runtimeNodes.containsKey(nodeId)) return
+        runtimeNodes.computeIfAbsent(nodeId) {
+            val nodeDefinition = getNodeDefinition(nodeId)
+            val nodeInstance = nodeRepository.createNodeInstance(
+                nodeDefinition.definitionName,
+                nodeDefinition.parametersJson
+            )
 
-        // create node instance and launch worker, but try to ensure we only create one holder
-        val nodeDefinition = getNodeDefinition(nodeId)
-        val nodeInstance = nodeRepository.createNodeInstance(
-            nodeDefinition.definitionName,
-            nodeDefinition.parametersJson
-        )
+            val job = scope.launch {
+                processMailboxLoop(nodeId, nodeInstance)
+            }
 
-        val job = scope.launch {
-            processMailboxLoop(nodeId, nodeInstance)
-        }
-
-        val holder = NodeRuntimeHolder(node = nodeInstance, workerJob = job)
-        val prev = runtimeNodes.putIfAbsent(nodeId, holder)
-        if (prev != null) {
-            // someone else created the runtime. cancel our job and let the other worker run
-            job.cancel()
+            NodeRuntimeHolder(node = nodeInstance, workerJob = job)
         }
     }
 
