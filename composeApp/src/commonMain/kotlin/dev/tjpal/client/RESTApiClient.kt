@@ -1,30 +1,15 @@
 package dev.tjpal.client
 
 import dev.tjpal.model.*
+import io.ktor.client.*
 import io.ktor.client.call.body
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import io.ktor.client.*
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.kotlinx.json.json
 
 class RESTApiException(val status: HttpStatusCode, message: String) : RuntimeException(message)
 
-class RESTApiClient(private val baseUrl: String) {
-    private val json: Json = Json {
-        prettyPrint = true
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-    }
-    private val client: HttpClient = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json(json)
-        }
-    }
+class RESTApiClient(private val client: HttpClient, private val baseUrl: String) {
 
     suspend fun getNodeDefinitions(): List<NodeDefinition> {
         val url = "$baseUrl/definitions"
