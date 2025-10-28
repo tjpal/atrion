@@ -1,6 +1,6 @@
 package dev.tjpal.graph
 
-import dev.tjpal.graph.model.GraphExecutionStatus
+import dev.tjpal.model.GraphExecutionStatus
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.BeforeTest

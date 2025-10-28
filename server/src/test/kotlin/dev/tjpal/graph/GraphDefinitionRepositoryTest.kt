@@ -1,6 +1,6 @@
 package dev.tjpal.graph
 
-import dev.tjpal.graph.model.GraphDefinition
+import dev.tjpal.model.GraphDefinition
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

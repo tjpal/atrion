@@ -1,6 +1,6 @@
 package dev.tjpal.nodes
 
-import dev.tjpal.graph.model.NodeDefinition
+import dev.tjpal.model.NodeDefinition
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.mockk

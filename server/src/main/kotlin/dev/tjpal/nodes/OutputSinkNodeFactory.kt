@@ -1,10 +1,10 @@
 package dev.tjpal.nodes
 
 import dev.tjpal.graph.ExecutionOutputStore
-import dev.tjpal.graph.model.ConnectorDefinition
-import dev.tjpal.graph.model.ConnectorSchema
-import dev.tjpal.graph.model.NodeDefinition
-import dev.tjpal.graph.model.NodeType
+import dev.tjpal.model.ConnectorDefinition
+import dev.tjpal.model.ConnectorSchema
+import dev.tjpal.model.NodeDefinition
+import dev.tjpal.model.NodeType
 import javax.inject.Inject
 
 @NodeFactoryKey(value = "sync_output")

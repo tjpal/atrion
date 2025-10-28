@@ -1,4 +1,4 @@
-package dev.tjpal.graph.model
+package dev.tjpal.model
 
 import kotlinx.serialization.Serializable
 

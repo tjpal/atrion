@@ -1,7 +1,7 @@
 package dev.tjpal.graph
 
-import dev.tjpal.graph.model.GraphDefinition
-import dev.tjpal.graph.model.NodeInstance
+import dev.tjpal.model.GraphDefinition
+import dev.tjpal.model.NodeInstance
 import dev.tjpal.nodes.Node
 import dev.tjpal.nodes.NodeRepository
 import io.mockk.coEvery

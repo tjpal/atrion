@@ -1,6 +1,6 @@
 package dev.tjpal.graph
 
-import dev.tjpal.graph.model.GraphDefinition
+import dev.tjpal.model.GraphDefinition
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject

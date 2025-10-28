@@ -1,12 +1,12 @@
 package dev.tjpal.graph
 
-import dev.tjpal.graph.model.GraphDefinition
-import dev.tjpal.graph.model.GraphExecutionStatus
+import dev.tjpal.model.GraphDefinition
+import dev.tjpal.model.GraphExecutionStatus
 import dev.tjpal.nodes.Node
 import dev.tjpal.nodes.NodeActivationContext
 import dev.tjpal.nodes.NodeOutput
 import dev.tjpal.nodes.NodeRepository
-import dev.tjpal.graph.model.NodeInstance
+import dev.tjpal.model.NodeInstance
 import dev.tjpal.nodes.NodeDeactivationContext
 import dev.tjpal.nodes.NodeInvocationContext
 import kotlinx.coroutines.CoroutineScope
