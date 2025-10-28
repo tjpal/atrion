@@ -1,19 +1,12 @@
 package dev.tjpal.api.route
 
 import dev.tjpal.graph.hooks.RestInputRegistry
+import dev.tjpal.model.RestInputRequest
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.http.HttpStatusCode
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class RestInputRequest(
-    val executionId: String,
-    val nodeId: String,
-    val payload: String
-)
 
 fun Route.restInputRoutes(restInputRegistry: RestInputRegistry) {
     post("/rest-input") {

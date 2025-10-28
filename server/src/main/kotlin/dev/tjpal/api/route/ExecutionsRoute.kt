@@ -2,8 +2,8 @@ package dev.tjpal.api.route
 
 import dev.tjpal.graph.ActiveGraphRepository
 import dev.tjpal.graph.GraphDefinitionRepository
+import dev.tjpal.model.ExecutionStartRequest
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
@@ -11,9 +11,6 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
-
-@kotlinx.serialization.Serializable
-private data class ExecutionStartRequest(val graphId: String)
 
 fun Routing.executionsRoute(graphRepository: GraphDefinitionRepository, activeGraphRepository: ActiveGraphRepository) {
     route("/executions") {
