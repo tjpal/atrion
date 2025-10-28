@@ -9,7 +9,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -48,7 +47,7 @@ fun main(args: Array<String>) = runBlocking {
                 "upload-graph" -> {
                     val arg = parts.getOrNull(1)
                     if (arg == null) {
-                        println("Usage: upload-graph <@file|paste>")
+                        println("Usage: upload-graph <@file|paste|json>")
                         continue
                     }
                     val body = if (arg.startsWith("@")) {
@@ -63,6 +62,29 @@ fun main(args: Array<String>) = runBlocking {
 
                     doPostRaw(client, baseUrl, "/graphs", body, json)
                 }
+                "modify-graph", "update-graph" -> {
+                    val id = parts.getOrNull(1)
+                    if (id.isNullOrBlank()) {
+                        println("Usage: modify-graph <id> <@file|paste|json>")
+                        continue
+                    }
+
+                    val payloadArg = parts.getOrNull(2)
+                    val body = when {
+                        payloadArg == null -> {
+                            println("Usage: modify-graph <id> <@file|paste|json>")
+                            continue
+                        }
+                        payloadArg.startsWith("@") -> File(payloadArg.substring(1)).readText()
+                        payloadArg == "paste" -> {
+                            println("Paste graph JSON, end with a single line containing only 'EOF'")
+                            readMultilineUntilEOF()
+                        }
+                        else -> payloadArg
+                    }
+
+                    doPutRaw(client, baseUrl, "/graphs/$id", body, json)
+                }
                 "get-graph" -> {
                     val id = parts.getOrNull(1)
                     if (id.isNullOrBlank()) { println("Usage: get-graph <id>"); continue }
@@ -76,9 +98,9 @@ fun main(args: Array<String>) = runBlocking {
                 "start-execution" -> {
                     val graphId = parts.getOrNull(1)
                     if (graphId.isNullOrBlank()) { println("Usage: start-execution <graphId>"); continue }
-                    val payload = json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), kotlinx.serialization.json.buildJsonObject { put("graphId", kotlinx.serialization.json.JsonPrimitive(graphId)) })
 
                     val jsonInput = "{\"graphId\":\"$graphId\"}"
+
                     doPostRaw(client, baseUrl, "/executions", jsonInput, json)
                 }
                 "list-executions" -> doGet(client, baseUrl, "/executions", json)
@@ -88,6 +110,7 @@ fun main(args: Array<String>) = runBlocking {
                     doDelete(client, baseUrl, "/executions/$id", json)
                 }
                 "rest-input" -> {
+                    // Usage: rest-input <executionId> <nodeId> <@file|payload>
                     val exe = parts.getOrNull(1)
                     val rest = parts.getOrNull(2)
                     if (exe.isNullOrBlank() || rest.isNullOrBlank()) {
@@ -95,7 +118,7 @@ fun main(args: Array<String>) = runBlocking {
                         println("Note: when payload contains spaces, quote it or use @filename to read from file")
                         continue
                     }
-                    // parts[2] contains nodeId plus payload maybe; split further
+
                     val sub = rest.split(Regex("\\s+"), 2)
                     val nodeId = sub[0]
                     val payloadRaw = if (sub.size > 1) sub[1] else ""
@@ -131,8 +154,12 @@ Available commands:
   definitions
       GET /definitions - list node definitions
 
-  upload-graph <@file|paste>
-      POST /graphs - create a new graph. Use @path/to/file to load JSON from file or 'paste' to paste JSON interactively.
+  upload-graph <@file|paste|json>
+      POST /graphs - create a new graph. Use @path/to/file to load JSON from file, 'paste' to paste JSON interactively, or provide JSON inline.
+      Note: the server returns only the created id (not the full graph).
+
+  modify-graph <id> <@file|paste|json>
+      PUT /graphs/{id} - replace an existing graph by id. Use @path/to/file to load JSON from file, 'paste' to paste JSON interactively, or provide JSON inline.
 
   get-graph <id>
       GET /graphs/{id}
@@ -164,13 +191,13 @@ Available commands:
 private suspend fun doGet(client: HttpClient, baseUrl: String, path: String, json: Json) {
     val url = baseUrl.trimEnd('/') + path
     val resp: HttpResponse = client.get(url)
-    printResponse(resp, json)
+    printResponse(resp)
 }
 
 private suspend fun doDelete(client: HttpClient, baseUrl: String, path: String, json: Json) {
     val url = baseUrl.trimEnd('/') + path
     val resp: HttpResponse = client.delete(url)
-    printResponse(resp, json)
+    printResponse(resp)
 }
 
 private suspend fun doPostRaw(client: HttpClient, baseUrl: String, path: String, rawJson: String, json: Json) {
@@ -178,10 +205,18 @@ private suspend fun doPostRaw(client: HttpClient, baseUrl: String, path: String,
     val resp: HttpResponse = client.post(url) {
         setBody(TextContent(rawJson, ContentType.Application.Json))
     }
-    printResponse(resp, json)
+    printResponse(resp)
 }
 
-private suspend fun printResponse(resp: HttpResponse, json: Json) {
+private suspend fun doPutRaw(client: HttpClient, baseUrl: String, path: String, rawJson: String, json: Json) {
+    val url = baseUrl.trimEnd('/') + path
+    val resp: HttpResponse = client.put(url) {
+        setBody(TextContent(rawJson, ContentType.Application.Json))
+    }
+    printResponse(resp)
+}
+
+private suspend fun printResponse(resp: HttpResponse) {
     val status = resp.status
     val text = try { resp.bodyAsText() } catch (e: Exception) { "" }
 
@@ -189,20 +224,7 @@ private suspend fun printResponse(resp: HttpResponse, json: Json) {
 
     if (text.isNullOrBlank()) return
 
-    prettyPrintJsonOrRaw(text, json)
-}
-
-private fun prettyPrintJsonOrRaw(text: String, json: Json) {
-    val trimmed = text.trim()
-    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-        try {
-            val elem: JsonElement = json.parseToJsonElement(trimmed)
-            println(json.encodeToString(JsonElement.serializer(), elem))
-            return
-        } catch (e: Exception) {
-
-        }
-    }
+    // Print the complete response body as a string
     println(text)
 }
 

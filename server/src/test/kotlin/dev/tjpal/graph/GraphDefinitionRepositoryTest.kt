@@ -60,4 +60,29 @@ class GraphDefinitionRepositoryTest {
             repo.get(id)
         }
     }
+
+    @Test
+    fun `replace existing graph updates stored graph`() {
+        val original = GraphDefinition(projectId = "original-project", nodes = emptyList(), edges = emptyList())
+        val id = repo.add(original)
+
+        val replacement = GraphDefinition(projectId = "replacement-project", nodes = emptyList(), edges = emptyList())
+
+        repo.replace(id, replacement)
+
+        val after = repo.get(id)
+        assertEquals(id, after.id)
+        assertEquals("replacement-project", after.projectId)
+        assertEquals(replacement.nodes, after.nodes)
+        assertEquals(replacement.edges, after.edges)
+    }
+
+    @Test
+    fun `replace non-existing graph throws`() {
+        val graph = GraphDefinition(projectId = "p", nodes = emptyList(), edges = emptyList())
+
+        assertFailsWith<IllegalArgumentException> {
+            repo.replace("does-not-exist", graph)
+        }
+    }
 }

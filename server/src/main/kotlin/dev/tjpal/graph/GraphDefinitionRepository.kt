@@ -27,4 +27,12 @@ class GraphDefinitionRepository @Inject constructor() {
     fun delete(id: String) {
         store.remove(id) ?: throw IllegalArgumentException("No graph with id: $id")
     }
+
+    fun replace(id: String, graph: GraphDefinition) {
+        val toStore = graph.copy(id = id)
+
+        val result = store.computeIfPresent(id) { _, _ -> toStore }
+
+        if (result == null) throw IllegalArgumentException("No graph with id: $id")
+    }
 }
