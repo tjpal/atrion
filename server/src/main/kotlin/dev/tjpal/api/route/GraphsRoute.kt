@@ -7,6 +7,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
@@ -15,6 +16,7 @@ fun Routing.graphsRoute(graphRepository: GraphDefinitionRepository) {
     route("/graphs") {
         post {
             try {
+                println(call)
                 val incoming = call.receive<GraphDefinition>()
                 val id = graphRepository.add(incoming)
                 call.respond(HttpStatusCode.Created, id)
@@ -44,6 +46,10 @@ fun Routing.graphsRoute(graphRepository: GraphDefinitionRepository) {
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "invalid request")))
             }
+        }
+
+        get {
+            call.respond(graphRepository.getAll())
         }
 
         delete("/{id}") {

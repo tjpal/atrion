@@ -43,6 +43,15 @@ class RESTApiClient(private val client: HttpClient, private val baseUrl: String)
         }
     }
 
+    suspend fun getGraphs(): List<GraphDefinition> {
+        val url = "$baseUrl/graphs"
+        val response: HttpResponse = client.get(url)
+        if (!response.status.isSuccess()) {
+            throw RESTApiException(response.status, "Failed to fetch graphs: ${response.status}")
+        }
+        return response.body()
+    }
+
     suspend fun deleteGraph(id: String) {
         val url = "$baseUrl/graphs/$id"
         val response: HttpResponse = client.delete(url)

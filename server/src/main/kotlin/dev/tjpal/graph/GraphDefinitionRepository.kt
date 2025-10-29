@@ -24,6 +24,10 @@ class GraphDefinitionRepository @Inject constructor() {
         return store[id] ?: throw IllegalArgumentException("No graph with id: $id")
     }
 
+    fun getAll(): List<GraphDefinition> {
+        return store.values.toList()
+    }
+
     fun delete(id: String) {
         store.remove(id) ?: throw IllegalArgumentException("No graph with id: $id")
     }

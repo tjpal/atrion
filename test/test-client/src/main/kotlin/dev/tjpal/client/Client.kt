@@ -85,10 +85,8 @@ fun main(args: Array<String>) = runBlocking {
 
                     doPutRaw(client, baseUrl, "/graphs/$id", body, json)
                 }
-                "get-graph" -> {
-                    val id = parts.getOrNull(1)
-                    if (id.isNullOrBlank()) { println("Usage: get-graph <id>"); continue }
-                    doGet(client, baseUrl, "/graphs/$id", json)
+                "get-graphs" -> {
+                    doGet(client, baseUrl, "/graphs", json)
                 }
                 "delete-graph" -> {
                     val id = parts.getOrNull(1)
