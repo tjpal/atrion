@@ -3,19 +3,19 @@
   "nodes": [
     {
       "id": "rest1",
-      "definitionName": "rest_input",
+      "definitionName": "REST Input",
       "parametersJson": "{}",
       "position": { "x": 100, "y": 100 }
     },
     {
       "id": "llm1",
-      "definitionName": "llm_processor",
+      "definitionName": "LLM Processor",
       "parametersJson": "{}",
       "position": { "x": 300, "y": 100 }
     },
     {
       "id": "out1",
-      "definitionName": "sync_output",
+      "definitionName": "Sink Output",
       "parametersJson": "{}",
       "position": { "x": 500, "y": 100 }
     }

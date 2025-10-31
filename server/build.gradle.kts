@@ -11,7 +11,7 @@ plugins {
 version = "1.0.0"
 
 application {
-    mainClass.set("$group.MainKt")
+    mainClass.set("dev.tjpal.MainKt")
     
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
