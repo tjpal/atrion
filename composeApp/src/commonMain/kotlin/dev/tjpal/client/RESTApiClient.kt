@@ -79,7 +79,7 @@ class RESTApiClient(private val client: HttpClient, private val baseUrl: String)
             throw RESTApiException(response.status, "Failed to start execution: ${response.status}")
         }
         val map: Map<String, String> = response.body()
-        return map["executionId"] ?: throw RESTApiException(response.status, "Missing executionId in response")
+        return map["graphInstanceId"] ?: throw RESTApiException(response.status, "Missing graph instance id in response")
     }
 
     suspend fun deleteExecution(id: String) {
@@ -99,14 +99,18 @@ class RESTApiClient(private val client: HttpClient, private val baseUrl: String)
         return response.body()
     }
 
-    suspend fun sendRestInput(executionId: String, nodeId: String, payload: String): Boolean {
+    suspend fun sendRestInput(graphInstanceId: String, nodeId: String, payload: String): String {
         val url = "$baseUrl/rest-input"
         val response: HttpResponse = client.post(url) {
             contentType(ContentType.Application.Json)
-            setBody(RestInputRequest(executionId, nodeId, payload))
+            setBody(RestInputRequest(graphInstanceId, nodeId, payload))
         }
         return when (response.status) {
-            HttpStatusCode.Accepted -> true
+            HttpStatusCode.Accepted -> {
+                val map: Map<String, Any> = response.body()
+                map["executionId"] as? String
+                    ?: throw RESTApiException(response.status, "Missing execution id in response")
+            }
             else -> throw RESTApiException(response.status, "Failed to send rest input: ${response.status}")
         }
     }
