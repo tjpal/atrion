@@ -81,7 +81,7 @@ class ActiveGraph(
                 )
 
                 val context = NodeActivationContext(
-                    executionId = id,
+                    graphInstanceId = id,
                     nodeId = nodeDef.id,
                     parametersJson = nodeDef.parametersJson,
                     graph = this
@@ -116,7 +116,7 @@ class ActiveGraph(
                 )
 
                 val context = NodeDeactivationContext(
-                    executionId = id,
+                    graphInstanceId = id,
                     nodeId = nodeDef.id
                 )
 
@@ -142,11 +142,11 @@ class ActiveGraph(
      * Is invoked by external registries for input events. Input nodes do not wait for their input. Instead they
      * rely on the graph to create an instance once an input event is received.
      */
-    fun onInputEvent(nodeId: String, payload: String) {
+    fun onInputEvent(nodeId: String, payload: String, executionId: String) {
         if (stopped.get()) return
 
         val mailbox = mailboxes.computeIfAbsent(nodeId) { Mailbox() }
-        val message = MailboxMessage("", payload) // Input connectorId is ignored by input nodes
+        val message = MailboxMessage("", payload, executionId) // Input connectorId is ignored by input nodes
 
         val messageEnqueued = mailbox.enqueue(message)
 
@@ -193,16 +193,17 @@ class ActiveGraph(
                     break
                 }
 
-                // NodeOutput implementation will call back into this ActiveGraph to route outputs
+                // NodeOutput implementation will call back into this ActiveGraph to route outputs. It must
+                // capture the per-input executionId so that downstream mailboxes receive messages associated to it.
                 val output = object : NodeOutput {
                     override fun send(outputConnectorId: String, payload: String) {
-                        routeOutput(nodeId, outputConnectorId, payload)
+                        routeOutput(nodeId, outputConnectorId, payload, message.executionId)
                     }
                 }
 
                 // Deliver the payload to the node instance
                 val nodeInvocationContext = NodeInvocationContext(
-                    executionId = id,
+                    executionId = message.executionId,
                     nodeId = nodeId,
                     payload = message.payload
                 )
@@ -214,13 +215,13 @@ class ActiveGraph(
         }
     }
 
-    private fun routeOutput(fromNodeId: String, fromConnectorId: String, payload: String) {
+    private fun routeOutput(fromNodeId: String, fromConnectorId: String, payload: String, executionId: String) {
         val key = Pair(fromNodeId, fromConnectorId)
         val targets = adjacency[key] ?: emptyList()
 
         targets.forEach { target ->
             val mailbox = mailboxes.computeIfAbsent(target.toNodeId) { Mailbox() }
-            val message = MailboxMessage(target.toConnectorId, payload)
+            val message = MailboxMessage(target.toConnectorId, payload, executionId)
 
             val messageEnqueued = mailbox.enqueue(message)
             if (!messageEnqueued) {

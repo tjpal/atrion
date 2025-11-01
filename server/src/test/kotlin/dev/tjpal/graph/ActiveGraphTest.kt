@@ -70,8 +70,9 @@ class ActiveGraphTest {
         // activate to create mailboxes
         activeGraph.activate()
 
-        // trigger input event
-        activeGraph.onInputEvent("n1", "hello")
+        // trigger input event with per-input execution id
+        val perInputId = "per-input-1"
+        activeGraph.onInputEvent("n1", "hello", perInputId)
 
         // wait for the node.onEvent to be called
         val completed = latch.await(2, TimeUnit.SECONDS)
@@ -83,7 +84,7 @@ class ActiveGraphTest {
         verify(atLeast = 1) { nodeRepository.createNodeInstance("type1", "{}") }
         coVerify(atLeast = 1) {
             node.onEvent(
-                match { it.payload == "hello" && it.nodeId == "n1" && it.executionId == "exec-input" },
+                match { it.payload == "hello" && it.nodeId == "n1" && it.executionId == perInputId },
                 any()
             )
         }

@@ -15,8 +15,8 @@ class RestInputNode(
     override fun onActivate(context: NodeActivationContext) {
         try {
             // register a mapping such that RestInputRegistry forwards incoming HTTP requests
-            // to graph.onInputEvent for this execution/node
-            restInputRegistry.register(context.executionId, context.nodeId, context.graph)
+            // to graph.onInputEvent for this graphInstanceId/node
+            restInputRegistry.register(context.graphInstanceId, context.nodeId, context.graph)
             registered = true
         } catch (e: Exception) {
             println("RestInputNode: failed to register HTTP input: ${e.message}")
@@ -30,7 +30,7 @@ class RestInputNode(
 
     override fun onStop(context: NodeDeactivationContext) {
         if(registered) {
-            restInputRegistry.unregister(context.executionId, context.nodeId)
+            restInputRegistry.unregister(context.graphInstanceId, context.nodeId)
         }
     }
 }

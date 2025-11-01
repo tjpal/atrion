@@ -5,7 +5,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 data class MailboxMessage(
     val toConnectorId: String,
-    val payload: String
+    val payload: String,
+    val executionId: String
 )
 
 /**

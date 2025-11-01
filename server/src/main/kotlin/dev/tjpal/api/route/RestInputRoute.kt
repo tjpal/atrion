@@ -7,19 +7,24 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.http.HttpStatusCode
+import java.util.UUID
 
 fun Route.restInputRoutes(restInputRegistry: RestInputRegistry) {
     post("/rest-input") {
         try {
             val request = call.receive<RestInputRequest>()
+
+            val resolvedExecutionId = request.executionId?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+
             val success = restInputRegistry.handleIncoming(
-                request.executionId,
+                request.graphInstanceId,
                 request.nodeId,
-                request.payload
+                request.payload,
+                resolvedExecutionId
             )
 
             if (success) {
-                call.respond(HttpStatusCode.Accepted, mapOf("accepted" to true))
+                call.respond(HttpStatusCode.Accepted, mapOf("accepted" to true, "executionId" to resolvedExecutionId))
             } else {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Failed to forward input to active graph"))
             }

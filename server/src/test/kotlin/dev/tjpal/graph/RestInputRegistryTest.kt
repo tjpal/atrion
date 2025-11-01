@@ -20,21 +20,22 @@ class RestInputRegistryTest {
     @Test
     fun `handleIncoming forwards to registered ActiveGraph and returns true`() {
         val graph = mockk<ActiveGraph>(relaxed = true)
-        val executionId = "exec-1"
+        val graphInstanceId = "graph-inst-1"
         val nodeId = "node-1"
         val payload = "payload"
+        val execId = "exec-1"
 
-        registry.register(executionId, nodeId, graph)
+        registry.register(graphInstanceId, nodeId, graph)
 
-        val result = registry.handleIncoming(executionId, nodeId, payload)
+        val result = registry.handleIncoming(graphInstanceId, nodeId, payload, execId)
 
         assertTrue(result)
-        verify(exactly = 1) { graph.onInputEvent(nodeId, payload) }
+        verify(exactly = 1) { graph.onInputEvent(nodeId, payload, execId) }
     }
 
     @Test
     fun `handleIncoming returns false when no registration exists`() {
-        val result = registry.handleIncoming("unknown-exec", "unknown-node", "p")
+        val result = registry.handleIncoming("unknown-graph", "unknown-node", "p", "e1")
 
         assertFalse(result)
     }
@@ -42,33 +43,33 @@ class RestInputRegistryTest {
     @Test
     fun `unregister removes mapping so handleIncoming returns false`() {
         val graph = mockk<ActiveGraph>(relaxed = true)
-        val executionId = "exec-2"
+        val graphInstanceId = "graph-inst-2"
         val nodeId = "node-2"
 
-        registry.register(executionId, nodeId, graph)
+        registry.register(graphInstanceId, nodeId, graph)
 
         // ensure forwarding works first
-        assertTrue(registry.handleIncoming(executionId, nodeId, "x"))
+        assertTrue(registry.handleIncoming(graphInstanceId, nodeId, "x", "exec-2"))
 
-        registry.unregister(executionId, nodeId)
+        registry.unregister(graphInstanceId, nodeId)
 
-        val result = registry.handleIncoming(executionId, nodeId, "x")
+        val result = registry.handleIncoming(graphInstanceId, nodeId, "x", "exec-2")
         assertFalse(result)
     }
 
     @Test
     fun `handleIncoming returns false when ActiveGraph onInputEvent throws`() {
         val graph = mockk<ActiveGraph>(relaxed = false)
-        val executionId = "exec-3"
+        val graphInstanceId = "graph-inst-3"
         val nodeId = "node-3"
 
-        every { graph.onInputEvent(nodeId, any()) } throws RuntimeException("boom")
+        every { graph.onInputEvent(nodeId, any(), any()) } throws RuntimeException("boom")
 
-        registry.register(executionId, nodeId, graph)
+        registry.register(graphInstanceId, nodeId, graph)
 
-        val result = registry.handleIncoming(executionId, nodeId, "payload")
+        val result = registry.handleIncoming(graphInstanceId, nodeId, "payload", "exec-3")
 
         assertFalse(result)
-        verify(exactly = 1) { graph.onInputEvent(nodeId, "payload") }
+        verify(exactly = 1) { graph.onInputEvent(nodeId, "payload", "exec-3") }
     }
 }

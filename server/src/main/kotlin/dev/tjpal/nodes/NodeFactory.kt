@@ -26,7 +26,7 @@ interface Node {
 // Context passed to nodes during activation
 // Includes reference to the ActiveGraph so nodes can create callbacks that forward incoming REST events to the graph.
 data class NodeActivationContext(
-    val executionId: String,
+    val graphInstanceId: String,
     val nodeId: String,
     val parametersJson: String,
     val graph: ActiveGraph
@@ -39,7 +39,7 @@ data class NodeInvocationContext(
 )
 
 data class NodeDeactivationContext(
-    val executionId: String,
+    val graphInstanceId: String,
     val nodeId: String
 )
 

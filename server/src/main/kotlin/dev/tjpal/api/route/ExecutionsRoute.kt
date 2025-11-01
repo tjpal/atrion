@@ -29,9 +29,9 @@ fun Routing.executionsRoute(graphRepository: GraphDefinitionRepository, activeGr
                     return@post
                 }
 
-                val executionId = activeGraphRepository.start(req.graphId)
+                val graphInstanceId = activeGraphRepository.start(req.graphId)
 
-                val created = mapOf("executionId" to executionId)
+                val created = mapOf("graphInstanceId" to graphInstanceId)
                 call.respond(HttpStatusCode.Created, created)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "invalid request")))
