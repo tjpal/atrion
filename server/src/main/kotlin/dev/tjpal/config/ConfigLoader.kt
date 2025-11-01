@@ -2,6 +2,8 @@ package dev.tjpal.config
 
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -13,6 +15,7 @@ class ConfigLoader @Inject constructor(
         httpHost = "0.0.0.0",
         httpPort = 8081,
         udsPath = "/tmp/atrion.socket",
+        storageDirectory = "${System.getProperty("user.home")}/.atrion/graphs",
         openAICredentialPath = "${System.getProperty("user.home")}/.atrion/cred"
     )
 
@@ -23,8 +26,10 @@ class ConfigLoader @Inject constructor(
             json.decodeFromString<Config>(text)
         } catch (e: Exception) {
             println("Error reading config: ${e.message}. Creating default file. Please review and restart.")
+
             file.parentFile?.mkdirs()
             file.writeText(json.encodeToString(default))
+
             default
         }
     }

@@ -7,12 +7,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-class GraphDefinitionRepositoryTest {
+class InMemoryGraphDefinitionRepositoryTest {
     private lateinit var repo: GraphDefinitionRepository
 
     @BeforeTest
     fun setUp() {
-        repo = GraphDefinitionRepository()
+        repo = InMemoryGraphDefinitionRepository()
     }
 
     @Test
