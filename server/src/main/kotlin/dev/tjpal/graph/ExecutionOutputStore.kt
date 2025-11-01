@@ -21,8 +21,17 @@ class ExecutionOutputStore @Inject constructor() {
         list.add(OutputRecord(nodeId = nodeId, payload = payload))
     }
 
-    fun getOutputs(executionId: String): List<OutputRecord> {
-        return store[executionId]?.toList() ?: emptyList()
+    /**
+     * Retrieves outputs for the given executionId. If clearAfter is true, the outputs are removed from the store
+     * atomically and returned; otherwise the outputs are returned as a snapshot and left in the store.
+     */
+    fun getOutputs(executionId: String, clearAfter: Boolean = false): List<OutputRecord> {
+        return if (clearAfter) {
+            val removed = store.remove(executionId)
+            removed?.toList() ?: emptyList()
+        } else {
+            store[executionId]?.toList() ?: emptyList()
+        }
     }
 
     fun clearOutputs(executionId: String) {
