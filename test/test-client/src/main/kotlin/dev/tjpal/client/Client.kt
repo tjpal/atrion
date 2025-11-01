@@ -108,12 +108,12 @@ fun main(args: Array<String>) = runBlocking {
                     doDelete(client, baseUrl, "/executions/$id", json)
                 }
                 "rest-input" -> {
-                    // Usage: rest-input <executionId> <nodeId> <@file|payload>
-                    val exe = parts.getOrNull(1)
+                    val graphInstanceId = parts.getOrNull(1)
                     val rest = parts.getOrNull(2)
-                    if (exe.isNullOrBlank() || rest.isNullOrBlank()) {
-                        println("Usage: rest-input <executionId> <nodeId> <@file|payload>")
-                        println("Note: when payload contains spaces, quote it or use @filename to read from file")
+                    if (graphInstanceId.isNullOrBlank() || rest.isNullOrBlank()) {
+                        println("Usage: rest-input <graphInstanceId> <nodeId> <@file|payload>")
+                        println("Note: the server will generate and return an executionId for this input. Do not provide an executionId.")
+                        println("When payload contains spaces, quote it or use @filename to read from file")
                         continue
                     }
 
@@ -129,7 +129,7 @@ fun main(args: Array<String>) = runBlocking {
                         readLine() ?: ""
                     } else payloadRaw
 
-                    val reqJson = "{\"executionId\":\"$exe\",\"nodeId\":\"$nodeId\",\"payload\":\"${escapeForJson(payload)}\"}"
+                    val reqJson = "{\"graphInstanceId\":\"$graphInstanceId\",\"nodeId\":\"$nodeId\",\"payload\":\"${escapeForJson(payload)}\"}"
                     doPostRaw(client, baseUrl, "/rest-input", reqJson, json)
                 }
                 "outputs" -> {
@@ -172,10 +172,10 @@ Available commands:
       GET /executions
 
   delete-execution <id>
-      DELETE /executions/{id}
+      DELETE /executions/{id}  (Deletes the active graph instance)
 
-  rest-input <executionId> <nodeId> <@file|payload>
-      POST /rest-input - send input to a specific active execution/node. Use @file to read payload from file.
+  rest-input <graphInstanceId> <nodeId> <@file|payload>
+      POST /rest-input - send input to a specific active graph instance/node.
 
   outputs <executionId>
       GET /executions/{id}/outputs
