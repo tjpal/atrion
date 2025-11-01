@@ -7,7 +7,6 @@ import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeType
 import javax.inject.Inject
 
-@NodeFactoryKey(value = "sync_output")
 class OutputSinkNodeFactory @Inject constructor(private val executionOutputStore: ExecutionOutputStore) : NodeFactory {
     override fun definition(): NodeDefinition {
         return NodeDefinition(

@@ -7,7 +7,6 @@ import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeType
 import javax.inject.Inject
 
-@NodeFactoryKey(value = "llm_processor")
 class LLMProcessingNodeFactory @Inject constructor(private val llm: LLM) : NodeFactory {
     override fun definition(): NodeDefinition {
         return NodeDefinition(
