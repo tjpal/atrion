@@ -11,11 +11,11 @@ import javax.inject.Inject
 class OutputSinkNodeFactory @Inject constructor(private val executionOutputStore: ExecutionOutputStore) : NodeFactory {
     override fun definition(): NodeDefinition {
         return NodeDefinition(
-            name = "Sync Output",
+            name = "Sink Output",
             type = NodeType.OUTPUT,
             category = "Output",
             description = "Stores textual outputs in-memory for synchronous retrieval",
-            icon = "sync_output",
+            icon = "sink_output",
             inputConnectors = listOf(ConnectorDefinition(id = "in", label = "In", schema = ConnectorSchema.TEXT)),
             outputConnectors = emptyList(),
             toolConnectors = emptyList(),
