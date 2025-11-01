@@ -7,9 +7,14 @@ import dev.tjpal.foundation.basics.text.Text
 import dev.tjpal.foundation.structure.graphs.EdgeSpec
 import dev.tjpal.foundation.structure.graphs.GraphState
 import dev.tjpal.foundation.structure.graphs.NodeSpec
+import dev.tjpal.foundation.structure.graphs.Connector
+import dev.tjpal.foundation.structure.graphs.EdgeSide
+import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.EdgeInstance
 import dev.tjpal.model.GraphDefinition
+import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeInstance
+import dev.tjpal.model.Position
 import dev.tjpal.repository.GraphRepository
 import dev.tjpal.repository.LoadState
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -2,6 +2,7 @@ package dev.tjpal.repository
 
 import dev.tjpal.client.RESTApiClient
 import dev.tjpal.model.GraphDefinition
+import dev.tjpal.model.NodeDefinition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
