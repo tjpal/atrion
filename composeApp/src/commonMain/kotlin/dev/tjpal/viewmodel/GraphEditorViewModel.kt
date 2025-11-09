@@ -12,7 +12,6 @@ import dev.tjpal.foundation.structure.graphs.EdgeSide
 import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.EdgeInstance
 import dev.tjpal.model.GraphDefinition
-import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeInstance
 import dev.tjpal.model.Position
 import dev.tjpal.repository.GraphRepository

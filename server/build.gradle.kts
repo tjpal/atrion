@@ -1,7 +1,8 @@
 plugins {
+    kotlin("kapt")
+
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
-    alias(libs.plugins.kapt)
     alias(libs.plugins.kotlinxSerialization)
 
     jacoco
