@@ -27,3 +27,12 @@ kotlin {
     }
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(24))
+    }
+}
+
+kotlin {
+    jvmToolchain(24)
+}
