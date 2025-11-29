@@ -12,6 +12,7 @@ import dev.tjpal.foundation.structure.graphs.EdgeSide
 import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.EdgeInstance
 import dev.tjpal.model.GraphDefinition
+import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeInstance
 import dev.tjpal.model.Position
 import dev.tjpal.repository.GraphRepository
@@ -45,6 +46,8 @@ class GraphEditorViewModel(
 
     private val _uiState: MutableStateFlow<GraphEditorUiState> = MutableStateFlow(GraphEditorUiState())
     val uiState: StateFlow<GraphEditorUiState> = _uiState
+
+    val nodeDefinitions = repository.nodeDefinitions
 
     init {
         viewModelScope.launch {
@@ -109,6 +112,18 @@ class GraphEditorViewModel(
         }
 
         _uiState.value = _uiState.value.copy(edges = uiFiltered)
+    }
+
+    fun switchToEditMode() {
+
+    }
+
+    fun switchToExecutionMode() {
+
+    }
+
+    fun insertNode(nodeDefinition: NodeDefinition) {
+
     }
 
     fun refresh() {
