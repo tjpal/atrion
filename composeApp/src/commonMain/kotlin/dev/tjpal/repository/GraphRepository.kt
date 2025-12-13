@@ -3,6 +3,7 @@ package dev.tjpal.repository
 import dev.tjpal.client.RESTApiClient
 import dev.tjpal.model.ExtendedNodeDefinition
 import dev.tjpal.model.GraphDefinition
+import dev.tjpal.util.decodePngBase64ToImageBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,8 +33,15 @@ class GraphRepository(
 
             try {
                 val definitions = api.getNodeDefinitions()
-                val clientDefs = definitions.map { ExtendedNodeDefinition(it) }
-                _nodeDefinitions.value = LoadState.Ready(clientDefs)
+
+                val clientDefinitions = definitions.map {
+                    val iconImage = decodePngBase64ToImageBitmap(it.icon)
+                    ExtendedNodeDefinition(
+                        definition = it,
+                        iconImage = iconImage
+                    )
+                }
+                _nodeDefinitions.value = LoadState.Ready(clientDefinitions)
             } catch (exception: Exception) {
                 val message = "Failed to fetch node definitions from server ${exception.message ?: exception}"
 

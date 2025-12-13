@@ -11,7 +11,10 @@ import atrion.composeapp.generated.resources.Res
 import atrion.composeapp.generated.resources.build_mode
 import atrion.composeapp.generated.resources.debug_mode
 import atrion.composeapp.generated.resources.play_mode
-import dev.tjpal.composition.foundation.basics.functional.*
+import dev.tjpal.composition.foundation.basics.functional.FloatingBar
+import dev.tjpal.composition.foundation.basics.functional.GroupBuilder
+import dev.tjpal.composition.foundation.basics.functional.IconButton
+import dev.tjpal.composition.foundation.basics.functional.WaitingCircle
 import dev.tjpal.composition.foundation.basics.text.Text
 import dev.tjpal.composition.foundation.themes.tokens.ButtonType
 import dev.tjpal.composition.foundation.themes.tokens.FloatingBarOrientation
@@ -60,12 +63,18 @@ fun GroupBuilder.nodeButtons(nodeDefinitions: LoadState<List<ExtendedNodeDefinit
 
             definitions.forEach { definition ->
                 item {
-                    Button(
+                    IconButton(
                         type = ButtonType.SHY,
                         onClick = { viewModel.insertNode(definition) },
                         modifier = Modifier.size(buttonSize)
                     ) {
-                        Text(definition.definition.name)
+                        definition.iconImage?.let {
+                            Image(
+                                bitmap = it,
+                                contentDescription = definition.definition.name,
+                                modifier = Modifier.size(buttonSize)
+                            )
+                        }
                     }
                 }
             }
