@@ -14,9 +14,9 @@ import dev.tjpal.composition.foundation.structure.graphs.EdgeSide
 import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.EdgeInstance
 import dev.tjpal.model.GraphDefinition
-import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeInstance
 import dev.tjpal.model.Position
+import dev.tjpal.model.ExtendedNodeDefinition
 import dev.tjpal.repository.GraphRepository
 import dev.tjpal.repository.LoadState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -124,7 +124,7 @@ class GraphEditorViewModel(
 
     }
 
-    fun insertNode(nodeDefinition: NodeDefinition) {
+    fun insertNode(nodeDefinition: ExtendedNodeDefinition) {
     }
 
     fun refresh() {
@@ -189,7 +189,7 @@ class GraphEditorViewModel(
         val nodeDefinitions = repository.nodeDefinitions.value
 
         val nodeDefinition = when (nodeDefinitions) {
-            is LoadState.Ready -> nodeDefinitions.data.firstOrNull { it.name == node.definitionName }
+            is LoadState.Ready -> nodeDefinitions.data.firstOrNull { it.definition.name == node.definitionName }
             else -> null
         }
 
@@ -202,10 +202,10 @@ class GraphEditorViewModel(
                 }
             }
 
-            build(nodeDefinition.inputConnectors, EdgeSide.LEFT)
-            build(nodeDefinition.outputConnectors, EdgeSide.RIGHT)
-            build(nodeDefinition.toolConnectors, EdgeSide.BOTTOM)
-            build(nodeDefinition.debugConnectors, EdgeSide.TOP)
+            build(nodeDefinition.definition.inputConnectors, EdgeSide.LEFT)
+            build(nodeDefinition.definition.outputConnectors, EdgeSide.RIGHT)
+            build(nodeDefinition.definition.toolConnectors, EdgeSide.BOTTOM)
+            build(nodeDefinition.definition.debugConnectors, EdgeSide.TOP)
 
             list
         } else {

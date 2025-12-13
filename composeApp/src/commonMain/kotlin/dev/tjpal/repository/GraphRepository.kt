@@ -1,8 +1,8 @@
 package dev.tjpal.repository
 
 import dev.tjpal.client.RESTApiClient
+import dev.tjpal.model.ExtendedNodeDefinition
 import dev.tjpal.model.GraphDefinition
-import dev.tjpal.model.NodeDefinition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,8 +22,8 @@ class GraphRepository(
     private val _graph: MutableStateFlow<LoadState<GraphDefinition>> = MutableStateFlow(LoadState.Loading)
     val graph: StateFlow<LoadState<GraphDefinition>> = _graph
 
-    private val _nodeDefinitions: MutableStateFlow<LoadState<List<NodeDefinition>>> = MutableStateFlow(LoadState.Loading)
-    val nodeDefinitions: StateFlow<LoadState<List<NodeDefinition>>> = _nodeDefinitions
+    private val _nodeDefinitions: MutableStateFlow<LoadState<List<ExtendedNodeDefinition>>> = MutableStateFlow(LoadState.Loading)
+    val nodeDefinitions: StateFlow<LoadState<List<ExtendedNodeDefinition>>> = _nodeDefinitions
 
     suspend fun refresh() {
         withContext(scope.coroutineContext + Dispatchers.Default) {
@@ -32,7 +32,8 @@ class GraphRepository(
 
             try {
                 val definitions = api.getNodeDefinitions()
-                _nodeDefinitions.value = LoadState.Ready(definitions)
+                val clientDefs = definitions.map { ExtendedNodeDefinition(it) }
+                _nodeDefinitions.value = LoadState.Ready(clientDefs)
             } catch (exception: Exception) {
                 val message = "Failed to fetch node definitions from server ${exception.message ?: exception}"
 

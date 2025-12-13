@@ -15,7 +15,7 @@ import dev.tjpal.composition.foundation.basics.functional.*
 import dev.tjpal.composition.foundation.basics.text.Text
 import dev.tjpal.composition.foundation.themes.tokens.ButtonType
 import dev.tjpal.composition.foundation.themes.tokens.FloatingBarOrientation
-import dev.tjpal.model.NodeDefinition
+import dev.tjpal.model.ExtendedNodeDefinition
 import dev.tjpal.repository.LoadState
 import dev.tjpal.viewmodel.GraphEditorViewModel
 import org.jetbrains.compose.resources.DrawableResource
@@ -49,14 +49,14 @@ fun GroupBuilder.functionButtons(viewModel: GraphEditorViewModel) {
     }
 }
 
-fun GroupBuilder.nodeButtons(nodeDefinitions: LoadState<List<NodeDefinition>>, viewModel: GraphEditorViewModel) {
+fun GroupBuilder.nodeButtons(nodeDefinitions: LoadState<List<ExtendedNodeDefinition>>, viewModel: GraphEditorViewModel) {
     val nodeItems = mutableListOf<@Composable ()-> Unit>()
 
     when(nodeDefinitions) {
         is LoadState.Loading -> nodeItems.add { WaitingCircle(modifier = Modifier.size(buttonSize)) }
         is LoadState.Error -> nodeItems.add { Text("Error") }
-        is LoadState.Ready<List<NodeDefinition>> -> {
-            val definitions = (nodeDefinitions as LoadState.Ready<List<NodeDefinition>>).data
+        is LoadState.Ready<List<ExtendedNodeDefinition>> -> {
+            val definitions = (nodeDefinitions as LoadState.Ready<List<ExtendedNodeDefinition>>).data
 
             definitions.forEach { definition ->
                 item {
@@ -65,7 +65,7 @@ fun GroupBuilder.nodeButtons(nodeDefinitions: LoadState<List<NodeDefinition>>, v
                         onClick = { viewModel.insertNode(definition) },
                         modifier = Modifier.size(buttonSize)
                     ) {
-                        Text(definition.name)
+                        Text(definition.definition.name)
                     }
                 }
             }
