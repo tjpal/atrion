@@ -3,6 +3,8 @@ package dev.tjpal.viewmodel
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import atrion.composeapp.generated.resources.Res
+import atrion.composeapp.generated.resources.build_mode
 import dev.tjpal.composition.foundation.basics.text.Text
 import dev.tjpal.composition.foundation.structure.graphs.EdgeSpec
 import dev.tjpal.composition.foundation.structure.graphs.GraphState
@@ -123,7 +125,6 @@ class GraphEditorViewModel(
     }
 
     fun insertNode(nodeDefinition: NodeDefinition) {
-
     }
 
     fun refresh() {
