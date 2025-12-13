@@ -5,16 +5,19 @@ import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeType
+import dev.tjpal.utilities.ImageResourceEncoder
 import javax.inject.Inject
 
 class OutputSinkNodeFactory @Inject constructor(private val executionOutputStore: ExecutionOutputStore) : NodeFactory {
     override fun definition(): NodeDefinition {
+        val imageResourceEncoder = ImageResourceEncoder()
+
         return NodeDefinition(
             name = "Sink Output",
             type = NodeType.OUTPUT,
             category = "Output",
             description = "Stores textual outputs in-memory for synchronous retrieval",
-            icon = "sink_output",
+            icon = imageResourceEncoder.encodeResourceToBase64("placeholder-3.png"),
             inputConnectors = listOf(ConnectorDefinition(id = "in", label = "In", schema = ConnectorSchema.TEXT)),
             outputConnectors = emptyList(),
             toolConnectors = emptyList(),
