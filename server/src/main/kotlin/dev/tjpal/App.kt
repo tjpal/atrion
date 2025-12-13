@@ -1,10 +1,11 @@
 package dev.tjpal
 
 import dev.tjpal.api.route.definitionsRoute
-import dev.tjpal.api.route.graphsRoute
+import dev.tjpal.api.route.eventsWebsocketRoute
 import dev.tjpal.api.route.executionsRoute
-import dev.tjpal.api.route.restInputRoutes
+import dev.tjpal.api.route.graphsRoute
 import dev.tjpal.api.route.outputsRoute
+import dev.tjpal.api.route.restInputRoutes
 import dev.tjpal.config.Config
 import dev.tjpal.graph.ActiveGraphRepository
 import dev.tjpal.graph.ExecutionOutputStore
@@ -18,10 +19,11 @@ import io.ktor.server.cio.CIO
 import io.ktor.server.cio.CIOApplicationEngine
 import io.ktor.server.cio.unixConnector
 import io.ktor.server.engine.EmbeddedServer
-import io.ktor.server.engine.embeddedServer
 import io.ktor.server.engine.connector
+import io.ktor.server.engine.embeddedServer
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
+import io.ktor.server.websocket.WebSockets
 import kotlinx.serialization.json.Json
 import java.nio.file.Files.createDirectories
 import java.nio.file.Files.delete
@@ -96,11 +98,17 @@ fun Application.module(
         json(defaultJson)
     }
 
+    install(WebSockets) {
+        maxFrameSize = Long.MAX_VALUE
+        masking = false
+    }
+
     routing {
         definitionsRoute(nodeRepository)
         graphsRoute(graphRepository)
         executionsRoute(graphRepository, activeGraphRepository)
         restInputRoutes(restInputRegistry)
         outputsRoute(executionOutputStore)
+        eventsWebsocketRoute()
     }
 }
