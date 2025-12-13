@@ -15,7 +15,7 @@ class ConfigModule {
     @Provides
     @Singleton
     @Named("configPath")
-    fun providesConfigPath(): String = System.getenv("ATRION_CONFIG_PATH") ?: "/etc/atrion/config.json"
+    fun providesConfigPath(): String = System.getenv("ATRION_CONFIG_PATH") ?: "${System.getProperty("user.home")}/.atrion/config.json"
 
     @Provides
     @Singleton
