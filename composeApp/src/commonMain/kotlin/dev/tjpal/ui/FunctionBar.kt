@@ -11,6 +11,7 @@ import atrion.composeapp.generated.resources.Res
 import atrion.composeapp.generated.resources.build_mode
 import atrion.composeapp.generated.resources.debug_mode
 import atrion.composeapp.generated.resources.play_mode
+import atrion.composeapp.generated.resources.store
 import dev.tjpal.composition.foundation.basics.functional.FloatingBar
 import dev.tjpal.composition.foundation.basics.functional.GroupBuilder
 import dev.tjpal.composition.foundation.basics.functional.IconButton
@@ -26,7 +27,19 @@ import org.jetbrains.compose.resources.painterResource
 
 private val buttonSize = 64.dp
 
-fun GroupBuilder.functionButtons(viewModel: GraphEditorViewModel) {
+fun GroupBuilder.operationButtons(viewModel: GraphEditorViewModel) {
+    item {
+        IconButton(type = ButtonType.SHY, onClick = { viewModel.save() }) {
+            Image(
+                painter = painterResource(Res.drawable.store),
+                contentDescription = "Store",
+                modifier = Modifier.size(buttonSize)
+            )
+        }
+    }
+}
+
+fun GroupBuilder.modeButtons(viewModel: GraphEditorViewModel) {
     data class FunctionalButton(
         val icon: DrawableResource,
         val content: String = "",
@@ -88,7 +101,10 @@ fun FunctionBar(viewModel: GraphEditorViewModel) {
 
     FloatingBar(buttonExtent = buttonSize, orientation = FloatingBarOrientation.HORIZONTAL) {
         group {
-            functionButtons(viewModel)
+            operationButtons(viewModel)
+        }
+        group {
+            modeButtons(viewModel)
         }
         group {
             nodeButtons(nodeDefinitions, viewModel)
