@@ -1,27 +1,33 @@
 package dev.tjpal.viewmodel
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import atrion.composeapp.generated.resources.Res
-import atrion.composeapp.generated.resources.build_mode
+import dev.tjpal.composition.foundation.basics.functional.Button
 import dev.tjpal.composition.foundation.basics.text.Text
+import dev.tjpal.composition.foundation.structure.graphs.Connector
+import dev.tjpal.composition.foundation.structure.graphs.EdgeSide
 import dev.tjpal.composition.foundation.structure.graphs.EdgeSpec
 import dev.tjpal.composition.foundation.structure.graphs.GraphState
 import dev.tjpal.composition.foundation.structure.graphs.NodeSpec
-import dev.tjpal.composition.foundation.structure.graphs.Connector
-import dev.tjpal.composition.foundation.structure.graphs.EdgeSide
 import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.EdgeInstance
+import dev.tjpal.model.ExtendedNodeDefinition
 import dev.tjpal.model.GraphDefinition
 import dev.tjpal.model.NodeInstance
 import dev.tjpal.model.Position
-import dev.tjpal.model.ExtendedNodeDefinition
 import dev.tjpal.repository.GraphRepository
 import dev.tjpal.repository.LoadState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.random.Random
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Single UI state emitted by the ViewModel. Contains everything the UI needs to create the foundation GraphEditor
@@ -32,7 +38,8 @@ data class GraphEditorUiState(
     val nodes: List<NodeSpec> = emptyList(),
     val edges: List<EdgeSpec> = emptyList(),
     val graphState: GraphState = GraphState(nodes),
-    val lastErrorMessage: String = ""
+    val lastErrorMessage: String = "",
+    val isModified: Boolean = false
 )
 
 /**
@@ -50,6 +57,16 @@ class GraphEditorViewModel(
     val uiState: StateFlow<GraphEditorUiState> = _uiState
 
     val nodeDefinitions = repository.nodeDefinitions
+    val isModified = repository.loadedGraphWasModified
+
+    // Simple incremental id counter for commonMain (multiplatform friendly)
+    private var idCounter: Long = 0L
+
+    private fun generateNodeId(): String {
+        val rnd = abs(Random.nextLong())
+        val counter = idCounter++
+        return "node-$counter-$rnd"
+    }
 
     init {
         viewModelScope.launch {
@@ -66,11 +83,13 @@ class GraphEditorViewModel(
     }
 
     private fun handleRepositoryLoading() {
+        // Preserve the isModified flag when switching to loading state
         _uiState.value = GraphEditorUiState(
             loadState = LoadState.Loading,
             nodes = emptyList(),
             edges = emptyList(),
-            graphState = GraphState(emptyList())
+            graphState = GraphState(emptyList()),
+            isModified = _uiState.value.isModified
         )
     }
 
@@ -85,7 +104,8 @@ class GraphEditorViewModel(
             loadState = LoadState.Ready(graph),
             nodes = nodes,
             edges = edges,
-            graphState = graphState
+            graphState = graphState,
+            isModified = _uiState.value.isModified
         )
     }
 
@@ -96,24 +116,12 @@ class GraphEditorViewModel(
         )
     }
 
-    fun onConnect(fromNodeId: String, fromConnectorId: String, toNodeId: String, toConnectorId: String) { val newEdge = EdgeInstance(
-            fromNodeId = fromNodeId,
-            fromConnectorId = fromConnectorId,
-            toNodeId = toNodeId,
-            toConnectorId = toConnectorId
-        )
-
-        val uiEdges = _uiState.value.edges + EdgeSpec(fromNodeId, fromConnectorId, toNodeId, toConnectorId)
-        _uiState.value = _uiState.value.copy(edges = uiEdges)
+    fun onConnect(fromNodeId: String, fromConnectorId: String, toNodeId: String, toConnectorId: String) {
+        repository.addEdge(fromNodeId, fromConnectorId, toNodeId, toConnectorId)
     }
 
     fun onDisconnect(nodeId: String, connectorId: String) {
-        val uiFiltered = _uiState.value.edges.filter { e ->
-            !((e.fromNodeId == nodeId && e.fromConnectorId == connectorId) ||
-                (e.toNodeId == nodeId && e.toConnectorId == connectorId))
-        }
-
-        _uiState.value = _uiState.value.copy(edges = uiFiltered)
+        repository.removeEdge(nodeId, connectorId)
     }
 
     fun switchToEditMode() {
@@ -124,7 +132,28 @@ class GraphEditorViewModel(
 
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     fun insertNode(nodeDefinition: ExtendedNodeDefinition) {
+        viewModelScope.launch {
+            val nodeInstance = NodeInstance(
+                id = Uuid.random().toString(),
+                definitionName = nodeDefinition.definition.name,
+                parametersJson = "{}",
+                position = Position(x = 0, y = 0)
+            )
+
+            repository.addNode(nodeInstance)
+        }
+    }
+
+    fun deleteNode(nodeId: String) {
+        viewModelScope.launch {
+            repository.removeNode(nodeId)
+        }
+    }
+
+    fun setNodePosition(nodeSpec: NodeSpec, position: Offset) {
+        repository.setNodePosition(nodeSpec.id, position.x.toInt(), position.y.toInt())
     }
 
     fun refresh() {
@@ -175,6 +204,8 @@ class GraphEditorViewModel(
         viewModelScope.launch {
             try {
                 repository.save(newGraphDefinition)
+                // Clear modified flag on successful save
+                _uiState.value = _uiState.value.copy(isModified = false)
             } catch (ex: Exception) {
                 val message = "Error saving graph: ${ex.message ?: ex.toString()}"
                 _uiState.value = _uiState.value.copy(lastErrorMessage = message)
@@ -186,28 +217,13 @@ class GraphEditorViewModel(
      * Maps business logic nodes to UI state nodes
      */
     private fun mapNodes(nodes: List<NodeInstance>): List<NodeSpec> = nodes.map { node ->
-        val nodeDefinitions = repository.nodeDefinitions.value
-
-        val nodeDefinition = when (nodeDefinitions) {
+        val nodeDefinition = when (val nodeDefinitions = repository.nodeDefinitions.value) {
             is LoadState.Ready -> nodeDefinitions.data.firstOrNull { it.definition.name == node.definitionName }
             else -> null
         }
 
         val connectors = if (nodeDefinition != null) {
-            val list = mutableListOf<Connector>()
-
-            fun build(listOfDefinitions: List<ConnectorDefinition>, side: EdgeSide) {
-                for ((index, def) in listOfDefinitions.withIndex()) {
-                    list.add(Connector(id = def.id, side = side, index = index))
-                }
-            }
-
-            build(nodeDefinition.definition.inputConnectors, EdgeSide.LEFT)
-            build(nodeDefinition.definition.outputConnectors, EdgeSide.RIGHT)
-            build(nodeDefinition.definition.toolConnectors, EdgeSide.BOTTOM)
-            build(nodeDefinition.definition.debugConnectors, EdgeSide.TOP)
-
-            list
+            buildConnectorsFromDefinition(nodeDefinition)
         } else {
             emptyList()
         }
@@ -219,7 +235,14 @@ class GraphEditorViewModel(
             heightMultiplier = 6,
             connectors = connectors,
             associatedData = NodeCustomData(definitionName = node.definitionName),
-            content = { _ -> Text(node.definitionName) },
+            content = { _ ->
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(node.definitionName)
+                    Button(onClick = { repository.removeNode(node.id) }) {
+                        Text("Delete")
+                    }
+                }
+            },
         )
     }
 
@@ -233,5 +256,22 @@ class GraphEditorViewModel(
             toNodeId = edge.toNodeId,
             toConnectorId = edge.toConnectorId
         )
+    }
+
+    private fun buildConnectorsFromDefinition(nodeDefinition: ExtendedNodeDefinition): List<Connector> {
+        val list = mutableListOf<Connector>()
+
+        fun build(listOfDefinitions: List<ConnectorDefinition>, side: EdgeSide) {
+            for ((index, def) in listOfDefinitions.withIndex()) {
+                list.add(Connector(id = def.id, side = side, index = index))
+            }
+        }
+
+        build(nodeDefinition.definition.inputConnectors, EdgeSide.LEFT)
+        build(nodeDefinition.definition.outputConnectors, EdgeSide.RIGHT)
+        build(nodeDefinition.definition.toolConnectors, EdgeSide.BOTTOM)
+        build(nodeDefinition.definition.debugConnectors, EdgeSide.TOP)
+
+        return list
     }
 }

@@ -15,7 +15,7 @@ data class NodeInstance(
     val id: String,
     val definitionName: String,
     val parametersJson: String,
-    val position: Position
+    var position: Position
 )
 
 @Serializable

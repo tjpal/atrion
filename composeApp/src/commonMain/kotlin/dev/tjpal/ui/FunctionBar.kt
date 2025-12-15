@@ -12,6 +12,7 @@ import atrion.composeapp.generated.resources.build_mode
 import atrion.composeapp.generated.resources.debug_mode
 import atrion.composeapp.generated.resources.play_mode
 import atrion.composeapp.generated.resources.store
+import atrion.composeapp.generated.resources.store_inactive
 import dev.tjpal.composition.foundation.basics.functional.FloatingBar
 import dev.tjpal.composition.foundation.basics.functional.GroupBuilder
 import dev.tjpal.composition.foundation.basics.functional.IconButton
@@ -29,9 +30,17 @@ private val buttonSize = 64.dp
 
 fun GroupBuilder.operationButtons(viewModel: GraphEditorViewModel) {
     item {
-        IconButton(type = ButtonType.SHY, onClick = { viewModel.save() }) {
+        val saveAction = {
+            // Allow saving even if the modified flag is not set. This serves as a worst-case recovery
+            // mechanism in case the flag is out of sync (Which won't happen ;)).
+            viewModel.save()
+        }
+
+        IconButton(type = ButtonType.SHY, onClick = saveAction) {
+            val isModified by viewModel.isModified.collectAsStateWithLifecycle()
+
             Image(
-                painter = painterResource(Res.drawable.store),
+                painter = painterResource(if(isModified) Res.drawable.store else Res.drawable.store_inactive),
                 contentDescription = "Store",
                 modifier = Modifier.size(buttonSize)
             )

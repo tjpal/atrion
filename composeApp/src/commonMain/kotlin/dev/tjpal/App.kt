@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -62,16 +63,19 @@ fun GraphEditScreen(viewModel: GraphEditorViewModel) {
         Box(modifier = Modifier.fillMaxSize()) {
             val gridSpacing = 24.dp
 
-            GraphEditor(
-                state = uiState.graphState,
-                nodes = uiState.nodes,
-                edges = uiState.edges,
-                gridSpacing = gridSpacing,
-                gridExtension = 2000f,
-                initialScaleMode = InitialScaleMode.DEFAULT,
-                onConnect = viewModel::onConnect,
-                onDisconnect = viewModel::onDisconnect
-            )
+            key(uiState) {
+                GraphEditor(
+                    state = uiState.graphState,
+                    nodes = uiState.nodes,
+                    edges = uiState.edges,
+                    gridSpacing = gridSpacing,
+                    gridExtension = 2000f,
+                    initialScaleMode = InitialScaleMode.DEFAULT,
+                    onConnect = viewModel::onConnect,
+                    onDisconnect = viewModel::onDisconnect,
+                    onNodeDragFinished = viewModel::setNodePosition
+                )
+            }
         }
     }
 }
