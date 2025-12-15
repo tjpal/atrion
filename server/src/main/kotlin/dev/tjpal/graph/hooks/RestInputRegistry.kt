@@ -4,6 +4,7 @@ import dev.tjpal.graph.ActiveGraph
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import dev.tjpal.logging.logger
 
 /**
  * Registry for REST input mappings. Maps (graphInstanceId, nodeId) -> ActiveGraph.
@@ -11,6 +12,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class RestInputRegistry @Inject constructor() {
+    private val logger = logger<RestInputRegistry>()
     private data class Key(val graphInstanceId: String, val nodeId: String)
     private val map = ConcurrentHashMap<Key, ActiveGraph>()
 
@@ -29,7 +31,7 @@ class RestInputRegistry @Inject constructor() {
             graph.onInputEvent(nodeId, payload, executionId)
             return true
         } catch (e: Exception) {
-            println("Error forwarding REST input to ActiveGraph: ${e.message}")
+            logger.error("Error forwarding REST input to ActiveGraph", e)
             return false
         }
     }

@@ -2,12 +2,13 @@ package dev.tjpal.graph
 
 import dev.tjpal.config.Config
 import dev.tjpal.filesystem.FileSystemService
+import dev.tjpal.logging.logger
 import dev.tjpal.model.GraphDefinition
+import kotlinx.serialization.json.Json
 import java.nio.file.Path
-import java.util.UUID
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.serialization.json.Json
 
 @Singleton
 class FileSystemGraphDefinitionRepository @Inject constructor(
@@ -15,6 +16,7 @@ class FileSystemGraphDefinitionRepository @Inject constructor(
     private val json: Json,
     private val fileSystemService: FileSystemService
 ) : GraphDefinitionRepository {
+    private val logger = logger<FileSystemGraphDefinitionRepository>()
     private val storagePath: Path = fileSystemService.getPath(config.storageDirectory)
 
     init {
@@ -56,7 +58,7 @@ class FileSystemGraphDefinitionRepository @Inject constructor(
                     val text = fileSystemService.readString(path)
                     json.decodeFromString<GraphDefinition>(text)
                 } catch (exception: Exception) {
-                    println("FileSystemGraphDefinitionRepository: failed to read/parse ${path.fileName}: ${exception.message}")
+                    logger.error("FileSystemGraphDefinitionRepository: failed to read/parse ${path.fileName}", exception)
                     null
                 }
             }

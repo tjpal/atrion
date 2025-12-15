@@ -11,12 +11,15 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger("dev.tjpal.api.route.GraphsRoute")
 
 fun Routing.graphsRoute(graphRepository: GraphDefinitionRepository) {
     route("/graphs") {
         post {
             try {
-                println(call)
+                logger.debug("Incoming request: {}", call)
                 val incoming = call.receive<GraphDefinition>()
                 val id = graphRepository.add(incoming)
                 call.respond(HttpStatusCode.Created, id)

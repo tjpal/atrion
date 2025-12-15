@@ -6,11 +6,14 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import javax.inject.Inject
 import javax.inject.Named
+import dev.tjpal.logging.logger
 
 class ConfigLoader @Inject constructor(
     @param:Named("configPath") private val configPath: String,
     private val json: Json
 ) {
+    private val logger = logger<ConfigLoader>()
+
     private val default = Config(
         httpHost = "0.0.0.0",
         httpPort = 8081,
@@ -25,7 +28,7 @@ class ConfigLoader @Inject constructor(
             val text = file.readText()
             json.decodeFromString<Config>(text)
         } catch (e: Exception) {
-            println("Error reading config: ${e.message}. Creating default file. Please review and restart.")
+            logger.error("Error reading config. Creating default file. Please review and restart.", e)
 
             file.parentFile?.mkdirs()
             file.writeText(json.encodeToString(default))

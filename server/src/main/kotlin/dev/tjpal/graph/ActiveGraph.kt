@@ -17,6 +17,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import dev.tjpal.logging.logger
 
 class ActiveGraph(
     val id: String,
@@ -24,6 +25,8 @@ class ActiveGraph(
     private val graphDefinition: GraphDefinition,
     private val nodeRepository: NodeRepository
 ) {
+    private val logger = logger<ActiveGraph>()
+
     fun getExecutionStatus(): GraphExecutionStatus = GraphExecutionStatus(
         id = id,
         graphId = graphId,
@@ -89,7 +92,7 @@ class ActiveGraph(
 
                 nodeInstance.onActivate(context)
             } catch (e: Exception) {
-                println("Error activating node ${nodeDef.id}: ${e.message}")
+                logger.error("Error activating node {}", nodeDef.id, e)
             }
         }
     }
@@ -122,7 +125,7 @@ class ActiveGraph(
 
                 nodeInstance.onStop(context)
             } catch (e: Exception) {
-                println("Error stopping node ${nodeDef.id}: ${e.message}")
+                logger.error("Error stopping node {}", nodeDef.id, e)
             }
         }
     }
@@ -133,6 +136,7 @@ class ActiveGraph(
                 holder.workerJob.cancel()
             } catch (e: Exception) {
                 // Ignored. Cannot be acted upon.
+                logger.debug("Error while canceling worker job", e)
             }
         }
         runtimeNodes.clear()
@@ -151,7 +155,7 @@ class ActiveGraph(
         val messageEnqueued = mailbox.enqueue(message)
 
         if (!messageEnqueued) {
-            println("Failed to enqueue message for node $nodeId (mailbox closed)")
+            logger.error("Failed to enqueue message for node {} (mailbox closed)", nodeId)
             return
         }
 
@@ -225,7 +229,7 @@ class ActiveGraph(
 
             val messageEnqueued = mailbox.enqueue(message)
             if (!messageEnqueued) {
-                println("Failed to enqueue message to ${target.toNodeId}")
+                logger.error("Failed to enqueue message to {}", target.toNodeId)
             } else {
                 scheduleNode(target.toNodeId)
             }

@@ -10,6 +10,7 @@ class RestInputNode(
     private val restInputRegistry: RestInputRegistry,
     private val parametersJson: String
 ) : Node {
+    private val logger = dev.tjpal.logging.logger<RestInputNode>()
     private var registered = false
 
     override fun onActivate(context: NodeActivationContext) {
@@ -19,7 +20,7 @@ class RestInputNode(
             restInputRegistry.register(context.graphInstanceId, context.nodeId, context.graph)
             registered = true
         } catch (e: Exception) {
-            println("RestInputNode: failed to register HTTP input: ${e.message}")
+            logger.error("RestInputNode: failed to register HTTP input for node {}", context.nodeId, e)
         }
     }
 

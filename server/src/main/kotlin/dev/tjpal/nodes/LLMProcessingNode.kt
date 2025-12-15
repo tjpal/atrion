@@ -2,8 +2,11 @@ package dev.tjpal.nodes
 
 import dev.tjpal.ai.LLM
 import dev.tjpal.ai.Request
+import dev.tjpal.logging.logger
 
 class LLMProcessingNode(private val parametersJson: String, private val llm: LLM) : Node {
+    private val logger = logger<LLMProcessingNode>()
+
     override fun onActivate(context: NodeActivationContext) {
         // No action
     }
@@ -24,7 +27,7 @@ class LLMProcessingNode(private val parametersJson: String, private val llm: LLM
 
             output.send("text_out", responsePayload)
         } catch (e: Exception) {
-            println("LLMProcessingNode: error during LLM processing: ${e.message}")
+            logger.error("LLMProcessingNode: error during LLM processing", e)
         }
     }
 

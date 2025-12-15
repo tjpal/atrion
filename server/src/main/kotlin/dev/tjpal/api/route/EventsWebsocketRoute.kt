@@ -7,10 +7,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.time.Instant
 import kotlin.random.Random
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger("dev.tjpal.api.route.EventsWebsocketRoute")
 
 fun Routing.eventsWebsocketRoute() {
     webSocket("/events") {
-        println("New websocket connection from ${this.call.request.local.remoteHost}")
+        logger.info("New websocket connection from {}", this.call.request.local.remoteHost)
 
         try {
             var counter = 0
@@ -21,9 +24,9 @@ fun Routing.eventsWebsocketRoute() {
 
                 try {
                     outgoing.send(Frame.Text(message))
-                    println("Sent: $message")
+                    logger.info("Sent: {}", message)
                 } catch (e: Exception) {
-                    println("Failed to send frame: ${e.message}")
+                    logger.error("Failed to send frame", e)
                     break
                 }
 
@@ -31,9 +34,9 @@ fun Routing.eventsWebsocketRoute() {
                 delay(delayMs)
             }
         } catch (e: Exception) {
-            println("Sender loop ended: ${e.message}")
+            logger.error("Sender loop ended", e)
         } finally {
-            println("Websocket connection closed for ${this.call.request.local.remoteHost}")
+            logger.info("Websocket connection closed for {}", this.call.request.local.remoteHost)
         }
     }
 }

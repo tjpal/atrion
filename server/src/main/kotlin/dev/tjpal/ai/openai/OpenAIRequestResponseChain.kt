@@ -6,8 +6,10 @@ import com.openai.models.responses.ResponseCreateParams
 import dev.tjpal.ai.Request
 import dev.tjpal.ai.RequestResponseChain
 import dev.tjpal.ai.Response
+import dev.tjpal.logging.logger
 
 class OpenAIRequestResponseChain(private val client: OpenAIClient): RequestResponseChain() {
+    private val logger = logger<OpenAIRequestResponseChain>()
     private var conversation: Conversation? = null
     private var responseIDs = mutableListOf<String>()
 
@@ -42,11 +44,11 @@ class OpenAIRequestResponseChain(private val client: OpenAIClient): RequestRespo
         val conversationID = conversation.id()
 
         responseIDs.forEach { responseID ->
-            println("OpenAIRequestResponseChain: Deleting response $responseID")
+            logger.info("OpenAIRequestResponseChain: Deleting response {}", responseID)
             client.responses().delete(responseID)
         }
 
-        println("OpenAIRequestResponseChain: Deleting conversation $conversationID")
+        logger.info("OpenAIRequestResponseChain: Deleting conversation {}", conversationID)
         client.conversations().delete(conversationID)
 
         this.conversation = null

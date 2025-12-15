@@ -27,6 +27,8 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.slf4j.api)
+    runtimeOnly(libs.logback)
 
     implementation(libs.dagger)
     kapt(libs.kapt.dagger)

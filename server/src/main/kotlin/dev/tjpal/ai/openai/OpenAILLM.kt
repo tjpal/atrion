@@ -13,9 +13,11 @@ import java.nio.file.Paths
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.io.path.Path
+import dev.tjpal.logging.logger
 
 @Singleton
 class OpenAILLM @Inject constructor(private val config: Config) : LLM {
+    private val logger = logger<OpenAILLM>()
     private val client = buildClientFromFile()
 
     private fun buildClientFromFile(): OpenAIClient {
@@ -24,6 +26,7 @@ class OpenAILLM @Inject constructor(private val config: Config) : LLM {
 
             return OpenAIOkHttpClient.builder().apiKey(key).build()
         } catch (e: IOException) {
+            logger.error("Failed to read OpenAI API key from {}", config.openAICredentialPath, e)
             throw IllegalStateException("Failed to read OpenAI API key from ${config.openAICredentialPath}", e)
         }
     }
