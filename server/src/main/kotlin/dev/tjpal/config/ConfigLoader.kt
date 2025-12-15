@@ -19,7 +19,8 @@ class ConfigLoader @Inject constructor(
         httpPort = 8081,
         udsPath = "/tmp/atrion.socket",
         storageDirectory = "${System.getProperty("user.home")}/.atrion/graphs",
-        openAICredentialPath = "${System.getProperty("user.home")}/.atrion/cred"
+        openAICredentialPath = "${System.getProperty("user.home")}/.atrion/cred",
+        statusRetentionEntries = 10000
     )
 
     fun loadOrCreate(): Config {

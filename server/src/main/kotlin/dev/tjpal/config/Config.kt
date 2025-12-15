@@ -8,5 +8,6 @@ data class Config(
     val httpPort: Int,
     val udsPath: String,
     val storageDirectory: String,
-    val openAICredentialPath: String
+    val openAICredentialPath: String,
+    val statusRetentionEntries: Int
 )

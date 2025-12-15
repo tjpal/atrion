@@ -1,6 +1,9 @@
 package dev.tjpal.nodes
 
 import dev.tjpal.graph.hooks.RestInputRegistry
+import dev.tjpal.graph.status.StatusRegistry
+import dev.tjpal.model.NodeStatus
+import dev.tjpal.model.StatusEntry
 
 /**
  * Registers/unregisters HTTP input via the provided RestInputRegistry and forwards it to input nodes via the active
@@ -8,7 +11,8 @@ import dev.tjpal.graph.hooks.RestInputRegistry
  */
 class RestInputNode(
     private val restInputRegistry: RestInputRegistry,
-    private val parametersJson: String
+    private val parametersJson: String,
+    private val statusRegistry: StatusRegistry
 ) : Node {
     private val logger = dev.tjpal.logging.logger<RestInputNode>()
     private var registered = false
@@ -27,6 +31,21 @@ class RestInputNode(
     override suspend fun onEvent(context: NodeInvocationContext, output: NodeOutput) {
         // Forward payload to default output connector
         output.send("out", context.payload)
+
+        sendStatusEntry(context.payload, context)
+    }
+
+    private fun sendStatusEntry(payload: String, context: NodeInvocationContext) {
+        val statusEntry = StatusEntry(
+            graphInstanceId = context.graphInstanceId,
+            executionId = context.executionId,
+            nodeId = context.nodeId,
+            timestamp = System.currentTimeMillis(),
+            nodeStatus = NodeStatus.FINISHED,
+            outputPayload = payload
+        )
+
+        statusRegistry.registerStatusEvent(statusEntry)
     }
 
     override fun onStop(context: NodeDeactivationContext) {

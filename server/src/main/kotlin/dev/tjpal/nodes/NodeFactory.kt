@@ -33,6 +33,7 @@ data class NodeActivationContext(
 )
 
 data class NodeInvocationContext(
+    val graphInstanceId: String,
     val executionId: String,
     val nodeId: String,
     val payload: String

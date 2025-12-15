@@ -1,6 +1,7 @@
 package dev.tjpal.nodes
 
 import dev.tjpal.ai.LLM
+import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
@@ -8,7 +9,10 @@ import dev.tjpal.model.NodeType
 import dev.tjpal.utilities.ImageResourceEncoder
 import javax.inject.Inject
 
-class LLMProcessingNodeFactory @Inject constructor(private val llm: LLM) : NodeFactory {
+class LLMProcessingNodeFactory @Inject constructor(
+    private val llm: LLM,
+    private val statusRegistry: StatusRegistry
+) : NodeFactory {
     override fun definition(): NodeDefinition {
         val resourceEncoder = ImageResourceEncoder()
 
@@ -27,6 +31,6 @@ class LLMProcessingNodeFactory @Inject constructor(private val llm: LLM) : NodeF
     }
 
     override fun createNode(parametersJson: String): Node {
-        return LLMProcessingNode(parametersJson, llm)
+        return LLMProcessingNode(parametersJson, llm, statusRegistry)
     }
 }

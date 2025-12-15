@@ -1,40 +1,97 @@
 package dev.tjpal.api.route
 
+import dev.tjpal.graph.status.StatusRegistry
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
+import io.ktor.server.routing.get
 import io.ktor.server.websocket.webSocket
+import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
-import kotlinx.coroutines.delay
+import io.ktor.websocket.close
 import kotlinx.coroutines.isActive
-import java.time.Instant
-import kotlin.random.Random
+import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("dev.tjpal.api.route.EventsWebsocketRoute")
 
-fun Routing.eventsWebsocketRoute() {
-    webSocket("/events") {
+fun Routing.statusesRoute(statusRegistry: StatusRegistry, json: Json) {
+    get("/events/statuses") {
+        val sinceParam = call.request.queryParameters["since"]
+
+        if (sinceParam.isNullOrBlank()) {
+            val allResults = statusRegistry.getStatuses()
+            call.respond(HttpStatusCode.OK, allResults)
+            return@get
+        }
+
+        val since = try {
+            sinceParam.toLong()
+        } catch (e: Exception) {
+            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid 'since' parameter"))
+            return@get
+        }
+
+        val results = statusRegistry.getStatusesSince(since)
+        call.respond(HttpStatusCode.OK, results)
+    }
+
+    webSocket("/events/statuses/stream") {
         logger.info("New websocket connection from {}", this.call.request.local.remoteHost)
 
-        try {
-            var counter = 0
+        val sinceParam = call.request.queryParameters["since"]
+        val initialSince = try {
+            sinceParam?.toLong() ?: 0L
+        } catch (e: Exception) {
+            close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Invalid 'since' parameter"))
+            return@webSocket
+        }
 
-            while (isActive) {
-                val timestamp = Instant.now().toString()
-                val message = "$timestamp: Random event #${++counter}"
+        var currentSince = initialSince
+
+        try {
+            val backlog = statusRegistry.getStatusesSince(currentSince)
+
+            for (entry in backlog) {
+                val statusAsJson = json.encodeToString(entry)
 
                 try {
-                    outgoing.send(Frame.Text(message))
-                    logger.info("Sent: {}", message)
+                    outgoing.send(Frame.Text(statusAsJson))
                 } catch (e: Exception) {
-                    logger.error("Failed to send frame", e)
-                    break
+                    logger.error("Failed to send backlog frame", e)
+                    close(CloseReason(CloseReason.Codes.INTERNAL_ERROR, "Failed to send backlog"))
+                    return@webSocket
                 }
 
-                val delayMs = Random.nextLong(1000L, 5001L)
-                delay(delayMs)
+                if (entry.timestamp > currentSince) {
+                    currentSince = entry.timestamp
+                }
             }
-        } catch (e: Exception) {
-            logger.error("Sender loop ended", e)
+
+            while (isActive) {
+                try {
+                    val newEntries = statusRegistry.waitForNewStatus(currentSince)
+
+                    for (entry in newEntries) {
+                        val statusAsJson = json.encodeToString(entry)
+
+                        try {
+                            outgoing.send(Frame.Text(statusAsJson))
+                        } catch (e: Exception) {
+                            logger.error("Failed to send frame", e)
+                            close(CloseReason(CloseReason.Codes.INTERNAL_ERROR, "Failed to send frame"))
+                            return@webSocket
+                        }
+
+                        if (entry.timestamp > currentSince) {
+                            currentSince = entry.timestamp
+                        }
+                    }
+                } catch (e: Exception) {
+                    logger.info("Websocket sender loop ended", e)
+                    break
+                }
+            }
         } finally {
             logger.info("Websocket connection closed for {}", this.call.request.local.remoteHost)
         }

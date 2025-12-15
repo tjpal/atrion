@@ -1,14 +1,15 @@
 package dev.tjpal.graph
 
+import dev.tjpal.logging.logger
 import dev.tjpal.model.GraphDefinition
 import dev.tjpal.model.GraphExecutionStatus
+import dev.tjpal.model.NodeInstance
 import dev.tjpal.nodes.Node
 import dev.tjpal.nodes.NodeActivationContext
-import dev.tjpal.nodes.NodeOutput
-import dev.tjpal.nodes.NodeRepository
-import dev.tjpal.model.NodeInstance
 import dev.tjpal.nodes.NodeDeactivationContext
 import dev.tjpal.nodes.NodeInvocationContext
+import dev.tjpal.nodes.NodeOutput
+import dev.tjpal.nodes.NodeRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -17,7 +18,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import dev.tjpal.logging.logger
 
 class ActiveGraph(
     val id: String,
@@ -207,6 +207,7 @@ class ActiveGraph(
 
                 // Deliver the payload to the node instance
                 val nodeInvocationContext = NodeInvocationContext(
+                    graphInstanceId = id,
                     executionId = message.executionId,
                     nodeId = nodeId,
                     payload = message.payload

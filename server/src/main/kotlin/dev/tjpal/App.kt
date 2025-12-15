@@ -1,16 +1,17 @@
 package dev.tjpal
 
 import dev.tjpal.api.route.definitionsRoute
-import dev.tjpal.api.route.eventsWebsocketRoute
 import dev.tjpal.api.route.executionsRoute
 import dev.tjpal.api.route.graphsRoute
 import dev.tjpal.api.route.outputsRoute
 import dev.tjpal.api.route.restInputRoutes
+import dev.tjpal.api.route.statusesRoute
 import dev.tjpal.config.Config
 import dev.tjpal.graph.ActiveGraphRepository
 import dev.tjpal.graph.ExecutionOutputStore
 import dev.tjpal.graph.GraphDefinitionRepository
 import dev.tjpal.graph.hooks.RestInputRegistry
+import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.nodes.NodeRepository
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -39,7 +40,8 @@ class App @Inject constructor(
     private val graphRepository: GraphDefinitionRepository,
     private val activeGraphRepository: ActiveGraphRepository,
     private val restInputRegistry: RestInputRegistry,
-    private val executionOutputStore: ExecutionOutputStore
+    private val executionOutputStore: ExecutionOutputStore,
+    private val statusRegistry: StatusRegistry
 ) {
     fun run() {
         val server = configureServer(config)
@@ -60,7 +62,9 @@ class App @Inject constructor(
                     }
                 }
             },
-            module = { module(nodeRepository, graphRepository, activeGraphRepository, restInputRegistry, executionOutputStore) }
+            module = {
+                module(nodeRepository, graphRepository, activeGraphRepository, restInputRegistry, executionOutputStore, statusRegistry)
+            }
         )
 
         return server
@@ -86,7 +90,8 @@ fun Application.module(
     graphRepository: GraphDefinitionRepository,
     activeGraphRepository: ActiveGraphRepository,
     restInputRegistry: RestInputRegistry,
-    executionOutputStore: ExecutionOutputStore
+    executionOutputStore: ExecutionOutputStore,
+    statusRegistry: StatusRegistry
 ) {
     val defaultJson = Json {
         prettyPrint = true
@@ -109,6 +114,6 @@ fun Application.module(
         executionsRoute(graphRepository, activeGraphRepository)
         restInputRoutes(restInputRegistry)
         outputsRoute(executionOutputStore)
-        eventsWebsocketRoute()
+        statusesRoute(statusRegistry, defaultJson)
     }
 }

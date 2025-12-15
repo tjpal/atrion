@@ -1,6 +1,7 @@
 package dev.tjpal.nodes
 
 import dev.tjpal.graph.hooks.RestInputRegistry
+import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
@@ -9,7 +10,8 @@ import dev.tjpal.utilities.ImageResourceEncoder
 import javax.inject.Inject
 
 class RestInputNodeFactory @Inject constructor(
-    private val restInputRegistry: RestInputRegistry
+    private val restInputRegistry: RestInputRegistry,
+    private val statusRegistry: StatusRegistry
 ) : NodeFactory {
     override fun definition(): NodeDefinition {
         val imageEncoder = ImageResourceEncoder()
@@ -29,6 +31,6 @@ class RestInputNodeFactory @Inject constructor(
     }
 
     override fun createNode(parametersJson: String): Node {
-        return RestInputNode(restInputRegistry, parametersJson)
+        return RestInputNode(restInputRegistry, parametersJson, statusRegistry)
     }
 }
