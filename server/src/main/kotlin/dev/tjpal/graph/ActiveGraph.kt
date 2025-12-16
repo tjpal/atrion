@@ -55,6 +55,7 @@ class ActiveGraph(
      * Activate the graph: build mailboxes, adjacency map, and call onActivate on all nodes to allow them to register external hooks.
      */
     fun activate() {
+        logger.info("Activating graph execution {} (graphId={})", id, graphId)
         createMailboxes()
         buildAdjacencyMap()
         callOnActivateOnNodes()
@@ -64,6 +65,7 @@ class ActiveGraph(
         for (node in graphDefinition.nodes) {
             mailboxes[node.id] = Mailbox()
         }
+        logger.debug("Created {} mailboxes for graph execution {}", mailboxes.size, id)
     }
 
     private fun buildAdjacencyMap() {
@@ -73,6 +75,7 @@ class ActiveGraph(
             val list = adjacency.getOrPut(key) { mutableListOf() }
             list.add(Target(edge.toNodeId, edge.toConnectorId))
         }
+        logger.debug("Adjacency map built with {} entries for execution {}", adjacency.size, id)
     }
 
     private fun callOnActivateOnNodes() {
@@ -91,6 +94,7 @@ class ActiveGraph(
                 )
 
                 nodeInstance.onActivate(context)
+                logger.debug("Activated node {} for execution {}", nodeDef.id, id)
             } catch (e: Exception) {
                 logger.error("Error activating node {}", nodeDef.id, e)
             }
@@ -99,6 +103,8 @@ class ActiveGraph(
 
     fun stop() {
         if (stopped.compareAndSet(false, true).not()) return
+
+        logger.info("Stopping graph execution {} (graphId={})", id, graphId)
 
         cancelAndStopRuntimeWorkers()
 
@@ -124,6 +130,7 @@ class ActiveGraph(
                 )
 
                 nodeInstance.onStop(context)
+                logger.debug("Stopped node {} for execution {}", nodeDef.id, id)
             } catch (e: Exception) {
                 logger.error("Error stopping node {}", nodeDef.id, e)
             }
@@ -147,7 +154,10 @@ class ActiveGraph(
      * rely on the graph to create an instance once an input event is received.
      */
     fun onInputEvent(nodeId: String, payload: String, executionId: String) {
-        if (stopped.get()) return
+        if (stopped.get()) {
+            logger.warn("Received input for stopped graph execution {} nodeId={}", id, nodeId)
+            return
+        }
 
         val mailbox = mailboxes.computeIfAbsent(nodeId) { Mailbox() }
         val message = MailboxMessage("", payload, executionId) // Input connectorId is ignored by input nodes
@@ -155,9 +165,11 @@ class ActiveGraph(
         val messageEnqueued = mailbox.enqueue(message)
 
         if (!messageEnqueued) {
-            logger.error("Failed to enqueue message for node {} (mailbox closed)", nodeId)
+            logger.error("Failed to enqueue message for node {} (mailbox closed) executionId={}", nodeId, executionId)
             return
         }
+
+        logger.debug("Enqueued message to nodeId={} executionId={} mailboxSizeApprox={}", nodeId, executionId, if (mailbox.isEmpty()) 0 else 1)
 
         scheduleNode(nodeId)
     }
@@ -173,6 +185,8 @@ class ActiveGraph(
             val job = scope.launch {
                 processMailboxLoop(nodeId, nodeInstance)
             }
+
+            logger.debug("Scheduled worker for nodeId={} executionId={} (new worker)", nodeId, id)
 
             NodeRuntimeHolder(node = nodeInstance, workerJob = job)
         }
@@ -190,10 +204,13 @@ class ActiveGraph(
         val mailBox = mailboxes[nodeId] ?: throw IllegalStateException("Mailbox not found for nodeId=$nodeId")
 
         try {
+            logger.info("Starting worker coroutine for node {} in execution {}", nodeId, id)
+
             while (true) {
                 val message = try {
                     mailBox.receive()
                 } catch (e: Exception) {
+                    logger.debug("Mailbox.receive ended for node {} in execution {}", nodeId, id)
                     break
                 }
 
@@ -213,10 +230,16 @@ class ActiveGraph(
                     payload = message.payload
                 )
 
-                nodeInstance.onEvent(nodeInvocationContext, output)
+                try {
+                    logger.debug("Delivering message to node {} executionId={} payload={}", nodeId, message.executionId, message.payload)
+                    nodeInstance.onEvent(nodeInvocationContext, output)
+                } catch (e: Exception) {
+                    logger.error("Node {} processing failed for execution {}", nodeId, e.message)
+                }
             }
         } finally {
             runtimeNodes.remove(nodeId)
+            logger.info("Worker coroutine stopped for node {} in execution {}", nodeId, id)
         }
     }
 
@@ -224,14 +247,17 @@ class ActiveGraph(
         val key = Pair(fromNodeId, fromConnectorId)
         val targets = adjacency[key] ?: emptyList()
 
+        logger.debug("Routing output from {}:{} to {} target(s) for execution {}", fromNodeId, fromConnectorId, targets.size, executionId)
+
         targets.forEach { target ->
             val mailbox = mailboxes.computeIfAbsent(target.toNodeId) { Mailbox() }
             val message = MailboxMessage(target.toConnectorId, payload, executionId)
 
             val messageEnqueued = mailbox.enqueue(message)
             if (!messageEnqueued) {
-                logger.error("Failed to enqueue message to {}", target.toNodeId)
+                logger.error("Failed to enqueue message to {} (execution {})", target.toNodeId, executionId)
             } else {
+                logger.debug("Enqueued routed message to {} (execution {})", target.toNodeId, executionId)
                 scheduleNode(target.toNodeId)
             }
         }

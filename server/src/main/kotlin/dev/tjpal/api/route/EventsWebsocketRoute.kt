@@ -1,6 +1,7 @@
 package dev.tjpal.api.route
 
 import dev.tjpal.graph.status.StatusRegistry
+import dev.tjpal.logging.logger
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
@@ -11,9 +12,9 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
-import org.slf4j.LoggerFactory
 
-private val logger = LoggerFactory.getLogger("dev.tjpal.api.route.EventsWebsocketRoute")
+private object EventsWebsocketRouteLogTag
+private val logger = logger<EventsWebsocketRouteLogTag>()
 
 fun Routing.statusesRoute(statusRegistry: StatusRegistry, json: Json) {
     get("/events/statuses") {
@@ -21,6 +22,7 @@ fun Routing.statusesRoute(statusRegistry: StatusRegistry, json: Json) {
 
         if (sinceParam.isNullOrBlank()) {
             val allResults = statusRegistry.getStatuses()
+            logger.info("GET /events/statuses returning {} total entries", allResults.size)
             call.respond(HttpStatusCode.OK, allResults)
             return@get
         }
@@ -28,11 +30,13 @@ fun Routing.statusesRoute(statusRegistry: StatusRegistry, json: Json) {
         val since = try {
             sinceParam.toLong()
         } catch (e: Exception) {
+            logger.warn("GET /events/statuses invalid since param: {}", sinceParam)
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid 'since' parameter"))
             return@get
         }
 
         val results = statusRegistry.getStatusesSince(since)
+        logger.debug("GET /events/statuses since={} returning {} entries", since, results.size)
         call.respond(HttpStatusCode.OK, results)
     }
 
@@ -43,6 +47,7 @@ fun Routing.statusesRoute(statusRegistry: StatusRegistry, json: Json) {
         val initialSince = try {
             sinceParam?.toLong() ?: 0L
         } catch (e: Exception) {
+            logger.warn("Websocket invalid since parameter: {}", sinceParam)
             close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Invalid 'since' parameter"))
             return@webSocket
         }
@@ -57,6 +62,7 @@ fun Routing.statusesRoute(statusRegistry: StatusRegistry, json: Json) {
 
                 try {
                     outgoing.send(Frame.Text(statusAsJson))
+                    logger.debug("Websocket sent backlog status timestamp={} to {}", entry.timestamp, this.call.request.local.remoteHost)
                 } catch (e: Exception) {
                     logger.error("Failed to send backlog frame", e)
                     close(CloseReason(CloseReason.Codes.INTERNAL_ERROR, "Failed to send backlog"))
@@ -76,6 +82,7 @@ fun Routing.statusesRoute(statusRegistry: StatusRegistry, json: Json) {
                         val statusAsJson = json.encodeToString(entry)
 
                         try {
+                            logger.debug("Sending status entry: $statusAsJson")
                             outgoing.send(Frame.Text(statusAsJson))
                         } catch (e: Exception) {
                             logger.error("Failed to send frame", e)

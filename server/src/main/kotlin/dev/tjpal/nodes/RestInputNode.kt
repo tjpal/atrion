@@ -23,6 +23,7 @@ class RestInputNode(
             // to graph.onInputEvent for this graphInstanceId/node
             restInputRegistry.register(context.graphInstanceId, context.nodeId, context.graph)
             registered = true
+            logger.info("RestInputNode activated and registered graphInstanceId={} nodeId={}", context.graphInstanceId, context.nodeId)
         } catch (e: Exception) {
             logger.error("RestInputNode: failed to register HTTP input for node {}", context.nodeId, e)
         }
@@ -33,6 +34,10 @@ class RestInputNode(
         output.send("out", context.payload)
 
         sendStatusEntry(context.payload, context)
+        logger.debug(
+            "RestInputNode forwarded payload for graphInstanceId={} nodeId={} executionId={} payload={}",
+            context.graphInstanceId, context.nodeId, context.executionId, context.payload
+        )
     }
 
     private fun sendStatusEntry(payload: String, context: NodeInvocationContext) {
@@ -51,6 +56,7 @@ class RestInputNode(
     override fun onStop(context: NodeDeactivationContext) {
         if(registered) {
             restInputRegistry.unregister(context.graphInstanceId, context.nodeId)
+            logger.info("RestInputNode unregistered graphInstanceId={} nodeId={}", context.graphInstanceId, context.nodeId)
         }
     }
 }

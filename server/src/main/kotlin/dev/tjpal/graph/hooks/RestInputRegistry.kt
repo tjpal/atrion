@@ -18,16 +18,19 @@ class RestInputRegistry @Inject constructor() {
 
     fun register(graphInstanceId: String, nodeId: String, graph: ActiveGraph) {
         map[Key(graphInstanceId, nodeId)] = graph
+        logger.debug("Registered rest input mapping graphInstanceId={} nodeId={}", graphInstanceId, nodeId)
     }
 
     fun unregister(graphInstanceId: String, nodeId: String) {
         map.remove(Key(graphInstanceId, nodeId))
+        logger.debug("Unregistered rest input mapping graphInstanceId={} nodeId={}", graphInstanceId, nodeId)
     }
 
     fun handleIncoming(graphInstanceId: String, nodeId: String, payload: String, executionId: String): Boolean {
         val graph = map[Key(graphInstanceId, nodeId)] ?: return false
 
         try {
+            logger.info("Handling incoming REST input graphInstanceId={} nodeId={} executionId={}", graphInstanceId, nodeId, executionId)
             graph.onInputEvent(nodeId, payload, executionId)
             return true
         } catch (e: Exception) {

@@ -15,6 +15,7 @@ class OpenAIRequestResponseChain(private val client: OpenAIClient): RequestRespo
 
     fun create() {
         conversation = client.conversations().create()
+        logger.debug("OpenAI conversation created id={}", conversation?.id())
     }
 
     override fun createResponse(request: Request): Response {
@@ -31,10 +32,14 @@ class OpenAIRequestResponseChain(private val client: OpenAIClient): RequestRespo
         request.responseType?.let { builder.text(it.java) }
         request.topP?.let { builder.topP(it) }
 
+        logger.debug("Creating OpenAI response for conversation={} with inputPreview={}", conversationID, request.input)
         val apiResponse = client.responses().create(builder.build())
+
         val response = Response(message = extractMessage(apiResponse))
+        logger.debug("Response: {}", response.message)
 
         responseIDs.add(apiResponse.id())
+        logger.debug("OpenAI response created id={} conversation={}", apiResponse.id(), conversationID)
 
         return response
     }
@@ -42,6 +47,8 @@ class OpenAIRequestResponseChain(private val client: OpenAIClient): RequestRespo
     override fun delete() {
         val conversation = conversation ?: throw IllegalStateException("Conversation not initialized")
         val conversationID = conversation.id()
+
+        logger.debug("OpenAIRequestResponseChain: Deleting responses for conversation {}", conversationID)
 
         responseIDs.forEach { responseID ->
             logger.info("OpenAIRequestResponseChain: Deleting response {}", responseID)

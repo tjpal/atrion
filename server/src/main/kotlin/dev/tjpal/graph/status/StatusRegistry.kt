@@ -36,6 +36,7 @@ class StatusRegistry @Inject constructor(private val config: Config) {
             }
 
             updates.tryEmit(entry)
+            logger.debug("StatusRegistry registered entry graphInstanceId={} nodeId={} executionId={} status={}", entry.graphInstanceId, entry.nodeId, entry.executionId, entry.nodeStatus)
         } catch (e: Exception) {
             logger.error("StatusRegistry: failed to register status", e)
         }
@@ -56,18 +57,23 @@ class StatusRegistry @Inject constructor(private val config: Config) {
     suspend fun waitForNewStatus(sinceTimestamp: Long): List<StatusEntry> {
         val existing = getStatusesSince(sinceTimestamp)
         if (existing.isNotEmpty()) {
+            logger.debug("waitForNewStatus returning immediately {} entries since={}", existing.size, sinceTimestamp)
             return existing
         }
 
         // Suspend until the first update appears that is newer than sinceTimestamp
         try {
+            logger.debug("waitForNewStatus waiting since={}", sinceTimestamp)
             updates.filter { it.timestamp > sinceTimestamp }.first()
         } catch (e: Exception) {
             // Might throw an cancellation. Propagate it up.
+            logger.debug("waitForNewStatus interrupted: {}", e.message)
             throw e
         }
 
         // After receiving at least one new entry, return whatever is now present since the timestamp
-        return getStatusesSince(sinceTimestamp)
+        val res = getStatusesSince(sinceTimestamp)
+        logger.debug("waitForNewStatus returning {} entries since={}", res.size, sinceTimestamp)
+        return res
     }
 }

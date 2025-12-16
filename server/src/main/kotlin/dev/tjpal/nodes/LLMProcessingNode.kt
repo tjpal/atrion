@@ -16,17 +16,21 @@ class LLMProcessingNode(
 
     override fun onActivate(context: NodeActivationContext) {
         // No action
+        logger.debug("LLMProcessingNode.onActivate graphInstanceId={} nodeId={}", context.graphInstanceId, context.nodeId)
     }
 
     override suspend fun onEvent(context: NodeInvocationContext, output: NodeOutput) {
         try {
             sendStatusEntry(NodeStatus.RUNNING, context.payload, null, null, context)
+            logger.info("LLMProcessingNode starting LLM chain for graphInstanceId={} nodeId={} executionId={}", context.graphInstanceId, context.nodeId, context.executionId)
             val chain = llm.createResponseRequestChain()
 
             val request = Request(
                 input = context.payload,
                 instructions = ""
             )
+
+            logger.debug("LLM request  {}", context.payload)
 
             val response = chain.createResponse(request)
             val responsePayload = response.message
@@ -35,8 +39,9 @@ class LLMProcessingNode(
 
             sendStatusEntry(NodeStatus.FINISHED, null, responsePayload,null, context)
             output.send("text_out", responsePayload)
+            logger.info("LLMProcessingNode finished LLM call for executionId={} nodeId={}", context.executionId, context.nodeId)
         } catch (e: Exception) {
-            logger.error("LLMProcessingNode: error during LLM processing", e)
+            logger.error("LLMProcessingNode: error during LLM processing for executionId={} nodeId={}: {}", context.executionId, context.nodeId, e.message)
 
             // For now just pass the exception message as error output. Later we turn this into a more user-friendly message.
             sendStatusEntry(NodeStatus.ERROR, null, null, e.message, context)
@@ -66,5 +71,6 @@ class LLMProcessingNode(
 
     override fun onStop(context: NodeDeactivationContext) {
         // No action
+        logger.debug("LLMProcessingNode.onStop graphInstanceId={} nodeId={}", context.graphInstanceId, context.nodeId)
     }
 }

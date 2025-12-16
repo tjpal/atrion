@@ -7,13 +7,13 @@ import com.openai.models.audio.transcriptions.TranscriptionCreateParams
 import dev.tjpal.ai.LLM
 import dev.tjpal.ai.RequestResponseChain
 import dev.tjpal.config.Config
+import dev.tjpal.logging.logger
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.io.path.Path
-import dev.tjpal.logging.logger
 
 @Singleton
 class OpenAILLM @Inject constructor(private val config: Config) : LLM {
@@ -35,10 +35,13 @@ class OpenAILLM @Inject constructor(private val config: Config) : LLM {
         val result = OpenAIRequestResponseChain(client)
         result.create()
 
+        logger.debug("OpenAI RequestResponseChain created")
+
         return result
     }
 
     override fun transcriptAudio(filePath: String): String {
+        logger.info("Transcribing audio file={}", filePath)
         val vadConfig = TranscriptionCreateParams.ChunkingStrategy.VadConfig.builder().
             type(TranscriptionCreateParams.ChunkingStrategy.VadConfig.Type.SERVER_VAD).
             silenceDurationMs(5000).
@@ -58,6 +61,8 @@ class OpenAILLM @Inject constructor(private val config: Config) : LLM {
 
         val transcription = transcriptionResponse.asTranscription()
 
-        return transcription.text()
+        val text = transcription.text()
+        logger.debug("Transcription completed: ${text.take(100)}...")
+        return text
     }
 }
