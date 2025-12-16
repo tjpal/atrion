@@ -20,8 +20,8 @@ import dev.tjpal.composition.foundation.basics.functional.WaitingCircle
 import dev.tjpal.composition.foundation.basics.text.Text
 import dev.tjpal.composition.foundation.themes.tokens.ButtonType
 import dev.tjpal.composition.foundation.themes.tokens.FloatingBarOrientation
+import dev.tjpal.graph.LoadState
 import dev.tjpal.model.ExtendedNodeDefinition
-import dev.tjpal.repository.LoadState
 import dev.tjpal.viewmodel.GraphEditorViewModel
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -56,9 +56,9 @@ fun GroupBuilder.modeButtons(viewModel: GraphEditorViewModel) {
     )
 
     val functionalButtons = listOf(
-        FunctionalButton(Res.drawable.build_mode) { viewModel.save() },
-        FunctionalButton(Res.drawable.play_mode) { viewModel.switchToEditMode() },
-        FunctionalButton(Res.drawable.debug_mode) { viewModel.switchToExecutionMode() }
+        FunctionalButton(Res.drawable.build_mode) { viewModel.switchToEditMode() },
+        FunctionalButton(Res.drawable.play_mode) { viewModel.switchToExecutionMode() },
+        FunctionalButton(Res.drawable.debug_mode) { }
     )
 
     functionalButtons.forEach {

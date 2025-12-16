@@ -14,6 +14,7 @@ openai = "3.6.0"
 koin = "4.1.0"
 composition = "1.1.0"
 slf4japi = "2.0.17"
+atomicfu = "0.29.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -35,7 +36,9 @@ ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.re
 ktor-server-cio = { module = "io.ktor:ktor-server-cio-jvm", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu" }
 
 kapt-dagger = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
 dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }

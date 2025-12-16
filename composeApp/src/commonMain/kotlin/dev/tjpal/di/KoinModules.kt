@@ -1,6 +1,7 @@
 package dev.tjpal.di
 
 import dev.tjpal.client.RESTApiClient
+import dev.tjpal.graph.ActiveGraphService
 import dev.tjpal.viewmodel.GraphEditorViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -29,10 +30,13 @@ val appModule = module {
     }
 
     single {
-        val baseUrl = getKoin().getProperty<String>("api.baseUrl") ?: "http://localhost:8081"
+        val baseUrl = getKoin().getProperty("api.baseUrl") ?: "http://localhost:8081"
         RESTApiClient(get(), baseUrl)
     }
 
-    // Provide the GraphEditorViewModel to Compose via Koin
-    viewModel { GraphEditorViewModel(get()) }
+    single {
+        ActiveGraphService(get())
+    }
+
+    viewModel { GraphEditorViewModel(get(), get()) }
 }

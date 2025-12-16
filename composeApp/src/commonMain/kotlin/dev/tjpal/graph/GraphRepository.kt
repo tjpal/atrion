@@ -1,4 +1,4 @@
-package dev.tjpal.repository
+package dev.tjpal.graph
 
 import dev.tjpal.client.RESTApiClient
 import dev.tjpal.model.EdgeInstance

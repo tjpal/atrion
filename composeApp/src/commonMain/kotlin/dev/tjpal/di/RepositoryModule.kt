@@ -1,7 +1,7 @@
 package dev.tjpal.di
 
+import dev.tjpal.graph.GraphRepository
 import org.koin.dsl.module
-import dev.tjpal.repository.GraphRepository
 
 val repositoryModule = module {
     single {

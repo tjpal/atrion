@@ -89,7 +89,7 @@ class RESTApiClient(private val client: HttpClient, private val baseUrl: String)
         return response.body()
     }
 
-    suspend fun startExecution(graphId: String): String {
+    suspend fun createGraphInstance(graphId: String): String {
         val url = "$baseUrl/executions"
         val response: HttpResponse = client.post(url) {
             contentType(ContentType.Application.Json)
@@ -102,8 +102,8 @@ class RESTApiClient(private val client: HttpClient, private val baseUrl: String)
         return map["graphInstanceId"] ?: throw RESTApiException(response.status, "Missing graph instance id in response")
     }
 
-    suspend fun deleteExecution(id: String) {
-        val url = "$baseUrl/executions/$id"
+    suspend fun deleteGraphInstance(graphId: String) {
+        val url = "$baseUrl/executions/$graphId"
         val response: HttpResponse = client.delete(url)
         if (response.status != HttpStatusCode.NoContent) {
             throw RESTApiException(response.status, "Failed to delete execution: ${response.status}")

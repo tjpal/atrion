@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dev.tjpal.composition.foundation.basics.functional.Button
 import dev.tjpal.composition.foundation.basics.text.Text
@@ -13,14 +14,17 @@ import dev.tjpal.composition.foundation.structure.graphs.EdgeSide
 import dev.tjpal.composition.foundation.structure.graphs.EdgeSpec
 import dev.tjpal.composition.foundation.structure.graphs.GraphState
 import dev.tjpal.composition.foundation.structure.graphs.NodeSpec
+import dev.tjpal.graph.ActiveGraphService
+import dev.tjpal.graph.GraphRepository
+import dev.tjpal.graph.LoadState
 import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.EdgeInstance
 import dev.tjpal.model.ExtendedNodeDefinition
 import dev.tjpal.model.GraphDefinition
 import dev.tjpal.model.NodeInstance
 import dev.tjpal.model.Position
-import dev.tjpal.repository.GraphRepository
-import dev.tjpal.repository.LoadState
+import dev.tjpal.model.StatusEntry
+import dev.tjpal.ui.StatusIcon
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -50,7 +54,8 @@ data class NodeCustomData(
 )
 
 class GraphEditorViewModel(
-    private val repository: GraphRepository
+    private val repository: GraphRepository,
+    private val activeGraphService: ActiveGraphService
 ) : ViewModel() {
 
     private val _uiState: MutableStateFlow<GraphEditorUiState> = MutableStateFlow(GraphEditorUiState())
@@ -125,11 +130,27 @@ class GraphEditorViewModel(
     }
 
     fun switchToEditMode() {
-
+        if(activeGraphService.isGraphActive()) {
+            if(activeGraphService.inTransition.value.not()) {
+                viewModelScope.launch {
+                    activeGraphService.stopActiveGraph()
+                }
+            }
+        }
     }
 
     fun switchToExecutionMode() {
-
+        if(activeGraphService.isGraphActive().not()) {
+            if(activeGraphService.inTransition.value.not()) {
+                viewModelScope.launch {
+                    val currentGraphState = repository.graph.value
+                    if(currentGraphState is LoadState.Ready) {
+                        val graphId = currentGraphState.data.id ?: return@launch
+                        activeGraphService.startActiveGraph(graphId)
+                    }
+                }
+            }
+        }
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -213,6 +234,8 @@ class GraphEditorViewModel(
         }
     }
 
+    fun observeNodeStatus(nodeId: String): StateFlow<StatusEntry?> = activeGraphService.observeNodeLastStatus(nodeId)
+
     /**
      * Maps business logic nodes to UI state nodes
      */
@@ -238,8 +261,16 @@ class GraphEditorViewModel(
             content = { _ ->
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(node.definitionName)
-                    Button(onClick = { repository.removeNode(node.id) }) {
-                        Text("Delete")
+
+                    val activeGraph = activeGraphService.activeGraph.collectAsStateWithLifecycle()
+                    val isInEditMode = activeGraph.value == null
+
+                    if(isInEditMode) {
+                        Button(onClick = { repository.removeNode(node.id) }) {
+                            Text("Delete")
+                        }
+                    } else {
+                        StatusIcon(node.id, this@GraphEditorViewModel)
                     }
                 }
             },

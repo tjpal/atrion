@@ -18,7 +18,7 @@ import dev.tjpal.composition.foundation.templates.WaitingTemplate
 import dev.tjpal.composition.foundation.themes.cascade.Cascade
 import dev.tjpal.composition.foundation.themes.tokens.FloatingBarLocation
 import dev.tjpal.composition.foundation.utilities.zoom.InitialScaleMode
-import dev.tjpal.repository.LoadState
+import dev.tjpal.graph.LoadState
 import dev.tjpal.ui.FunctionBar
 import dev.tjpal.viewmodel.GraphEditorViewModel
 import org.koin.compose.viewmodel.koinViewModel

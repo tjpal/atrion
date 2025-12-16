@@ -1,4 +1,4 @@
-package dev.tjpal.repository
+package dev.tjpal.graph
 
 /**
  * LoadState wrapper representing loading / ready / error states for a single value.

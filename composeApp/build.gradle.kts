@@ -38,6 +38,8 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
 
+            implementation(libs.kotlinx.atomicfu)
+
             implementation(libs.composition)
         }
         commonTest.dependencies {
