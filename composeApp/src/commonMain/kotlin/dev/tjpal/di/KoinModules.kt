@@ -31,7 +31,8 @@ val appModule = module {
 
     single {
         val baseUrl = getKoin().getProperty("api.baseUrl") ?: "http://localhost:8081"
-        RESTApiClient(get(), baseUrl)
+        val webSocketBaseUrl = getKoin().getProperty("wsBaseUrl") ?: "ws://localhost:8081"
+        RESTApiClient(get(), baseUrl, webSocketBaseUrl)
     }
 
     single {

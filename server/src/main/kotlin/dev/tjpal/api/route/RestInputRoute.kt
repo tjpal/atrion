@@ -32,7 +32,7 @@ fun Route.restInputRoutes(restInputRegistry: RestInputRegistry) {
 
             if (success) {
                 logger.info("/rest-input forwarded to active graph graphInstanceId={} nodeId={} executionId={}", request.graphInstanceId, request.nodeId, resolvedExecutionId)
-                call.respond(HttpStatusCode.Accepted, mapOf("accepted" to true, "executionId" to resolvedExecutionId))
+                call.respond(HttpStatusCode.Accepted, mapOf("executionId" to resolvedExecutionId))
             } else {
                 logger.warn("/rest-input failed to forward graphInstanceId={} nodeId={}", request.graphInstanceId, request.nodeId)
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Failed to forward input to active graph"))

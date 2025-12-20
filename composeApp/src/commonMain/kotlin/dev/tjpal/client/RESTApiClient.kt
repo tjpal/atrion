@@ -27,7 +27,7 @@ import kotlinx.serialization.json.Json
 
 class RESTApiException(val status: HttpStatusCode, message: String) : RuntimeException(message)
 
-class RESTApiClient(private val client: HttpClient, private val baseUrl: String) {
+class RESTApiClient(private val client: HttpClient, private val baseUrl: String, private val webSocketBaseUrl: String) {
 
     private val json = Json { prettyPrint = true; ignoreUnknownKeys = true; encodeDefaults = true }
 
@@ -145,7 +145,7 @@ class RESTApiClient(private val client: HttpClient, private val baseUrl: String)
     }
 
     suspend fun streamStatuses(since: Long = 0L, onStatus: suspend (StatusEntry) -> Unit) {
-        val streamUrl = "$baseUrl/events/statuses/stream?since=$since"
+        val streamUrl = "$webSocketBaseUrl/events/statuses/stream?since=$since"
 
         client.webSocket(urlString = streamUrl) {
             while (!incoming.isClosedForReceive) {

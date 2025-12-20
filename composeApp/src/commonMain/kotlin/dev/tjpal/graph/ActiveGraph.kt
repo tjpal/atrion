@@ -1,6 +1,7 @@
 package dev.tjpal.graph
 
 import dev.tjpal.model.StatusEntry
+import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -8,9 +9,10 @@ import kotlinx.coroutines.flow.StateFlow
 class ActiveGraph(val graphInstanceId: String) {
     private var nodeLastStatusFlows: MutableMap<String, MutableStateFlow<StatusEntry?>> = mutableMapOf()
     private var currentExecutionId: String? = null
+    private var lock = SynchronizedObject()
 
     fun appendStatus(status: StatusEntry) {
-        synchronized(this) {
+        synchronized(lock) {
             val isNewExecution = (currentExecutionId == null) || (status.executionId != currentExecutionId)
 
             if (isNewExecution) {
@@ -29,7 +31,7 @@ class ActiveGraph(val graphInstanceId: String) {
     }
 
     fun observeNodeLastStatus(nodeId: String): StateFlow<StatusEntry?> {
-        synchronized(this) {
+        synchronized(lock) {
             return nodeLastStatusFlows.getOrPut(nodeId) { MutableStateFlow(null) }
         }
     }
@@ -39,7 +41,5 @@ class ActiveGraph(val graphInstanceId: String) {
         for(flow in nodeLastStatusFlows.values) {
             flow.value = null
         }
-
-        nodeLastStatusFlows = mutableMapOf()
     }
 }

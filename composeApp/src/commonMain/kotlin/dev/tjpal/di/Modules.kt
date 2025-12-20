@@ -8,5 +8,6 @@ fun listModules(): List<Module> = listOf(
 )
 
 fun listProperties(): Map<String, Any> = mapOf(
-    "api.baseUrl" to "http://localhost:8081"
+    "api.baseUrl" to "http://localhost:8081",
+    "api.wsUrl" to "ws://localhost:8081"
 )
