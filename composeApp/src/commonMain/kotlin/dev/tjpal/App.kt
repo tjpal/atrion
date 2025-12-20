@@ -20,6 +20,7 @@ import dev.tjpal.composition.foundation.themes.tokens.FloatingBarLocation
 import dev.tjpal.composition.foundation.utilities.zoom.InitialScaleMode
 import dev.tjpal.graph.LoadState
 import dev.tjpal.ui.FunctionBar
+import dev.tjpal.ui.navigation.Navigation
 import dev.tjpal.viewmodel.GraphEditorViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -94,6 +95,6 @@ fun GraphEditorMainScreen(viewModel: GraphEditorViewModel = koinViewModel()) {
 @Composable
 fun App() {
     Cascade {
-        GraphEditorMainScreen()
+        Navigation()
     }
 }

@@ -19,7 +19,7 @@ data class ConnectorDefinition(
 )
 
 @Serializable
-enum class ParameterType { BOOLEAN, INT, FLOAT, STRING }
+enum class ParameterType { BOOLEAN, INT, FLOAT, STRING , LONG_TEXT}
 
 @Serializable
 data class ParameterDefinition(

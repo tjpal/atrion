@@ -21,10 +21,14 @@ import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.EdgeInstance
 import dev.tjpal.model.ExtendedNodeDefinition
 import dev.tjpal.model.GraphDefinition
+import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeInstance
+import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.Position
 import dev.tjpal.model.StatusEntry
 import dev.tjpal.ui.StatusIcon
+import dev.tjpal.ui.navigation.ConfigureNodeDialogRoute
+import dev.tjpal.ui.navigation.LocalNavController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -47,10 +51,11 @@ data class GraphEditorUiState(
 )
 
 /**
- * Custom data associated with each node in the GraphEditor. Makes mapping between business logic state and UI state easier.
+ * Associated with the graphical representation of each node. Acts as a shortcut to access business logic data.
  */
 data class NodeCustomData(
-    val definitionName: String
+    val node: NodeInstance,
+    val definition: NodeDefinition
 )
 
 class GraphEditorViewModel(
@@ -159,7 +164,7 @@ class GraphEditorViewModel(
             val nodeInstance = NodeInstance(
                 id = Uuid.random().toString(),
                 definitionName = nodeDefinition.definition.name,
-                parametersJson = "{}",
+                parameters = NodeParameters(),
                 position = Position(x = 0, y = 0)
             )
 
@@ -198,8 +203,8 @@ class GraphEditorViewModel(
 
             NodeInstance(
                 id = node.id,
-                definitionName = customData.definitionName,
-                parametersJson = "{}",
+                definitionName = customData.definition.name,
+                parameters = NodeParameters(),
                 position = Position(
                     x = currentPosition.x.toInt(),
                     y = currentPosition.y.toInt()
@@ -245,11 +250,11 @@ class GraphEditorViewModel(
             else -> null
         }
 
-        val connectors = if (nodeDefinition != null) {
-            buildConnectorsFromDefinition(nodeDefinition)
-        } else {
-            emptyList()
+        if(nodeDefinition == null) {
+            return@mapNodes emptyList()
         }
+
+        val connectors =  buildConnectorsFromDefinition(nodeDefinition)
 
         NodeSpec(
             id = node.id,
@@ -257,7 +262,7 @@ class GraphEditorViewModel(
             widthMultiplier = 6,
             heightMultiplier = 6,
             connectors = connectors,
-            associatedData = NodeCustomData(definitionName = node.definitionName),
+            associatedData = NodeCustomData(node, nodeDefinition.definition),
             content = { _ ->
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(node.definitionName)
@@ -266,6 +271,12 @@ class GraphEditorViewModel(
                     val isInEditMode = activeGraph.value == null
 
                     if(isInEditMode) {
+                        val navController = LocalNavController.current
+
+                        Button(onClick = { navController.navigate(ConfigureNodeDialogRoute(node.id)) }) {
+                            Text("Configure")
+                        }
+
                         Button(onClick = { repository.removeNode(node.id) }) {
                             Text("Delete")
                         }
