@@ -1,6 +1,7 @@
 package dev.tjpal.nodes
 
 import dev.tjpal.model.NodeDefinition
+import dev.tjpal.model.NodeParameters
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.mockk
@@ -12,7 +13,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
-import kotlin.test.assertTrue
 
 class NodeRepositoryTest {
     @BeforeTest
@@ -43,10 +43,10 @@ class NodeRepositoryTest {
         val repo = NodeRepository(emptyMap())
 
         val ex = assertFailsWith<IllegalArgumentException> {
-            repo.createNodeInstance("unknown-type", "{}")
+            repo.createNodeInstance("unknown-type", NodeParameters())
         }
 
-        assertTrue(ex.message?.contains("No factory registered for node type") == true)
+        assertEquals(ex.message?.contains("No factory registered for node type"), true)
     }
 
     @Test
@@ -54,13 +54,13 @@ class NodeRepositoryTest {
         val node = mockk<Node>()
         val factory = mockk<NodeFactory>()
         val json = """{"foo":"bar"}"""
-        every { factory.createNode(json) } returns node
+        every { factory.createNode(NodeParameters()) } returns node
 
         val repo = NodeRepository(mapOf("my-type" to factory))
 
-        val result = repo.createNodeInstance("my-type", json)
+        val result = repo.createNodeInstance("my-type", NodeParameters())
 
         assertSame(node, result)
-        verify(exactly = 1) { factory.createNode(json) }
+        verify(exactly = 1) { factory.createNode(NodeParameters()) }
     }
 }

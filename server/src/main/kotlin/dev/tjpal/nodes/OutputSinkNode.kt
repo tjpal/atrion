@@ -3,12 +3,13 @@ package dev.tjpal.nodes
 import dev.tjpal.graph.ExecutionOutputStore
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.logging.logger
+import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeStatus
 import dev.tjpal.model.StatusEntry
 import javax.inject.Inject
 
 class OutputSinkNode @Inject constructor(
-    private val parametersJson: String,
+    private val parameters: NodeParameters,
     private val executionOutputStore: ExecutionOutputStore,
     private val statusRegistry: StatusRegistry
 ) : Node {

@@ -4,11 +4,12 @@ import dev.tjpal.ai.LLM
 import dev.tjpal.ai.Request
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.logging.logger
+import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeStatus
 import dev.tjpal.model.StatusEntry
 
 class LLMProcessingNode(
-    private val parametersJson: String,
+    private val parameters: NodeParameters,
     private val llm: LLM,
     private val statusRegistry: StatusRegistry
 ) : Node {
@@ -25,9 +26,12 @@ class LLMProcessingNode(
             logger.info("LLMProcessingNode starting LLM chain for graphInstanceId={} nodeId={} executionId={}", context.graphInstanceId, context.nodeId, context.executionId)
             val chain = llm.createResponseRequestChain()
 
+            val promptTemplate = parameters.values["Prompt"] ?: "{{input}}"
+            val resolvedPrompt = promptTemplate.replace("{{input}}", context.payload)
+
             val request = Request(
                 input = context.payload,
-                instructions = ""
+                instructions = resolvedPrompt
             )
 
             logger.debug("LLM request  {}", context.payload)

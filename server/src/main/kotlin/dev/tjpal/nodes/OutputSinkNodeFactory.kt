@@ -6,6 +6,7 @@ import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeType
+import dev.tjpal.model.NodeParameters
 import dev.tjpal.utilities.ImageResourceEncoder
 import javax.inject.Inject
 
@@ -30,7 +31,7 @@ class OutputSinkNodeFactory @Inject constructor(
         )
     }
 
-    override fun createNode(parametersJson: String): Node {
-        return OutputSinkNode(parametersJson, executionOutputStore, statusRegistry)
+    override fun createNode(parameters: NodeParameters): Node {
+        return OutputSinkNode(parameters, executionOutputStore, statusRegistry)
     }
 }

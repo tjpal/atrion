@@ -1,6 +1,7 @@
 package dev.tjpal.nodes
 
 import dev.tjpal.model.NodeDefinition
+import dev.tjpal.model.NodeParameters
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -11,9 +12,9 @@ class NodeRepository @Inject constructor(
     fun getAllDefinitions(): List<NodeDefinition> =
         factoryMap.values.map(NodeFactory::definition)
 
-    fun createNodeInstance(type: String, parametersJson: String): Node {
+    fun createNodeInstance(type: String, parameters: NodeParameters): Node {
         val factory = factoryMap[type] ?: throw IllegalArgumentException("No factory registered for node type: $type")
 
-        return factory.createNode(parametersJson)
+        return factory.createNode(parameters)
     }
 }

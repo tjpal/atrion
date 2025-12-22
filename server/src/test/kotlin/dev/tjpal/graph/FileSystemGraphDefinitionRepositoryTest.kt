@@ -1,12 +1,11 @@
 package dev.tjpal.graph
 
-import dev.tjpal.model.GraphDefinition
 import dev.tjpal.config.Config
+import dev.tjpal.model.GraphDefinition
 import kotlinx.serialization.json.Json
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.Comparator
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -64,7 +63,8 @@ class FileSystemGraphDefinitionRepositoryTest {
             httpPort = 8081,
             udsPath = "/tmp/atrion.socket",
             storageDirectory = baseDirectory.toString(),
-            openAICredentialPath = ""
+            openAICredentialPath = "",
+            statusRetentionEntries = 10
         )
         repository = FileSystemGraphDefinitionRepository(config, json, fileSystemService)
     }

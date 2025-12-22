@@ -2,6 +2,7 @@ package dev.tjpal.graph
 
 import dev.tjpal.model.GraphDefinition
 import dev.tjpal.model.NodeInstance
+import dev.tjpal.model.NodeParameters
 import dev.tjpal.nodes.Node
 import dev.tjpal.nodes.NodeRepository
 import io.mockk.coEvery
@@ -10,11 +11,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 class ActiveGraphTest {
     private lateinit var graphDefinition: GraphDefinition
@@ -28,7 +29,7 @@ class ActiveGraphTest {
         nodeInstanceDef = mockk(relaxed = true)
         every { nodeInstanceDef.id } returns "n1"
         every { nodeInstanceDef.definitionName } returns "type1"
-        every { nodeInstanceDef.parametersJson } returns "{}"
+        every { nodeInstanceDef.parameters } returns NodeParameters()
 
         every { graphDefinition.nodes } returns listOf(nodeInstanceDef)
         every { graphDefinition.edges } returns emptyList()
@@ -40,14 +41,14 @@ class ActiveGraphTest {
     fun `activate should call onActivate on all nodes`() {
         val node = mockk<Node>(relaxed = true)
 
-        every { nodeRepository.createNodeInstance("type1", "{}") } returns node
+        every { nodeRepository.createNodeInstance("type1", NodeParameters()) } returns node
 
         val activeGraph = ActiveGraph(id = "exec-activate", graphId = "g1", graphDefinition = graphDefinition, nodeRepository = nodeRepository)
 
         activeGraph.activate()
 
         // verify node instance created and onActivate called
-        verify(exactly = 1) { nodeRepository.createNodeInstance("type1", "{}") }
+        verify(exactly = 1) { nodeRepository.createNodeInstance("type1", NodeParameters()) }
         verify(exactly = 1) { node.onActivate(any()) }
     }
 
@@ -63,7 +64,7 @@ class ActiveGraphTest {
             Unit
         }
 
-        every { nodeRepository.createNodeInstance("type1", "{}") } returns node
+        every { nodeRepository.createNodeInstance("type1", NodeParameters()) } returns node
 
         val activeGraph = ActiveGraph(id = "exec-input", graphId = "g1", graphDefinition = graphDefinition, nodeRepository = nodeRepository)
 
@@ -81,7 +82,7 @@ class ActiveGraphTest {
         assertTrue(completed)
 
         // verify createNodeInstance was used to construct the node instance
-        verify(atLeast = 1) { nodeRepository.createNodeInstance("type1", "{}") }
+        verify(atLeast = 1) { nodeRepository.createNodeInstance("type1", NodeParameters()) }
         coVerify(atLeast = 1) {
             node.onEvent(
                 match { it.payload == "hello" && it.nodeId == "n1" && it.executionId == perInputId },
@@ -94,7 +95,7 @@ class ActiveGraphTest {
     fun `stop should call onStop on all nodes`() = runBlocking {
         val node = mockk<Node>(relaxed = true)
 
-        every { nodeRepository.createNodeInstance("type1", "{}") } returns node
+        every { nodeRepository.createNodeInstance("type1", NodeParameters()) } returns node
 
         val activeGraph = ActiveGraph(id = "exec-stop", graphId = "g1", graphDefinition = graphDefinition, nodeRepository = nodeRepository)
 
@@ -102,7 +103,7 @@ class ActiveGraphTest {
         activeGraph.stop()
 
         // verify node instance created for stop call and onStop invoked
-        verify(atLeast = 1) { nodeRepository.createNodeInstance("type1", "{}") }
+        verify(atLeast = 1) { nodeRepository.createNodeInstance("type1", NodeParameters()) }
         verify(exactly = 1) { node.onStop(any()) }
     }
 }

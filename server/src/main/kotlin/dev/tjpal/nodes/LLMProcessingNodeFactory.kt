@@ -5,6 +5,7 @@ import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
+import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeType
 import dev.tjpal.model.ParameterDefinition
 import dev.tjpal.model.ParameterType
@@ -37,7 +38,7 @@ class LLMProcessingNodeFactory @Inject constructor(
         )
     }
 
-    override fun createNode(parametersJson: String): Node {
-        return LLMProcessingNode(parametersJson, llm, statusRegistry)
+    override fun createNode(parameters: NodeParameters): Node {
+        return LLMProcessingNode(parameters, llm, statusRegistry)
     }
 }

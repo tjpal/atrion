@@ -11,10 +11,13 @@ data class GraphDefinition(
 )
 
 @Serializable
+data class NodeParameters(val values: Map<String, String> = emptyMap())
+
+@Serializable
 data class NodeInstance(
     val id: String,
     val definitionName: String,
-    val parametersJson: String,
+    var parameters: NodeParameters = NodeParameters(),
     var position: Position
 )
 

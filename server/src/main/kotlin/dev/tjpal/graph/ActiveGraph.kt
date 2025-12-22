@@ -83,13 +83,13 @@ class ActiveGraph(
             try {
                 val nodeInstance = nodeRepository.createNodeInstance(
                     nodeDef.definitionName,
-                    nodeDef.parametersJson
+                    nodeDef.parameters
                 )
 
                 val context = NodeActivationContext(
                     graphInstanceId = id,
                     nodeId = nodeDef.id,
-                    parametersJson = nodeDef.parametersJson,
+                    parameters = nodeDef.parameters,
                     graph = this
                 )
 
@@ -121,7 +121,7 @@ class ActiveGraph(
             try {
                 val nodeInstance = nodeRepository.createNodeInstance(
                     nodeDef.definitionName,
-                    nodeDef.parametersJson
+                    nodeDef.parameters
                 )
 
                 val context = NodeDeactivationContext(
@@ -179,7 +179,7 @@ class ActiveGraph(
             val nodeDefinition = getNodeDefinition(nodeId)
             val nodeInstance = nodeRepository.createNodeInstance(
                 nodeDefinition.definitionName,
-                nodeDefinition.parametersJson
+                nodeDefinition.parameters
             )
 
             val job = scope.launch {

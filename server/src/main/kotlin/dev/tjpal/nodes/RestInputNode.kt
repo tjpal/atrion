@@ -2,6 +2,7 @@ package dev.tjpal.nodes
 
 import dev.tjpal.graph.hooks.RestInputRegistry
 import dev.tjpal.graph.status.StatusRegistry
+import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeStatus
 import dev.tjpal.model.StatusEntry
 
@@ -11,7 +12,7 @@ import dev.tjpal.model.StatusEntry
  */
 class RestInputNode(
     private val restInputRegistry: RestInputRegistry,
-    private val parametersJson: String,
+    private val parameters: NodeParameters,
     private val statusRegistry: StatusRegistry
 ) : Node {
     private val logger = dev.tjpal.logging.logger<RestInputNode>()
