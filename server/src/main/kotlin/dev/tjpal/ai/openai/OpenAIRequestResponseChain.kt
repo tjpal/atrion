@@ -29,8 +29,19 @@ class OpenAIRequestResponseChain(private val client: OpenAIClient): RequestRespo
             .temperature(request.temperature)
             .conversation(conversationID)
 
-        request.responseType?.let { builder.text(it.java) }
-        request.topP?.let { builder.topP(it) }
+        request.tools.forEach { toolKClass ->
+            logger.debug("Adding tool to response builder: {}", toolKClass.qualifiedName)
+            builder.addTool(toolKClass.java)
+        }
+
+        request.responseType?.let {
+            logger.debug("Setting response type to: {}", it.java)
+            builder.text(it.java)
+        }
+        request.topP?.let {
+            logger.debug("Setting topP to: {}", it)
+            builder.topP(it)
+        }
 
         logger.debug("Creating OpenAI response for conversation={} with inputPreview={}", conversationID, request.input)
         val apiResponse = client.responses().create(builder.build())
