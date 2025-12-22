@@ -15,9 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +26,7 @@ import dev.tjpal.composition.foundation.basics.functional.Button
 import dev.tjpal.composition.foundation.basics.functional.Input
 import dev.tjpal.composition.foundation.basics.text.Text
 import dev.tjpal.composition.foundation.themes.tokens.TextType
+import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.ParameterDefinition
 import dev.tjpal.ui.navigation.LocalNavController
 import dev.tjpal.viewmodel.GraphEditorViewModel
@@ -35,7 +35,6 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinViewModel()) {
-    val navController = LocalNavController.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val nodeSpec = uiState.nodes.firstOrNull { it.id == nodeId }
@@ -54,7 +53,11 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
                 .wrapContentSize(align = Alignment.TopStart)
                 .padding(16.dp)) {
 
-                Text(text = "Configure node: ${associatedData.definition.name}")
+                val paramValues = remember {
+                    mutableStateMapOf<String, String>().apply {
+                        parameters.forEach { put(it.name, it.default ?: "") }
+                    }
+                }
 
                 if (parameters.isEmpty()) {
                     Text(text = "No parameters to configure for this node.")
@@ -68,29 +71,50 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         parameters.forEach { param ->
-                            ParameterRow(param = param)
+                            ParameterRow(
+                                param = param,
+                                value = paramValues[param.name] ?: "",
+                                onValueChange = { newValue -> paramValues[param.name] = newValue }
+                            )
                         }
                     }
                 }
 
-                Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
-                    Button(onClick = { navController.popBackStack() }) {
-                        Text(text = "Close")
-                    }
-
-                    Button(onClick = { navController.popBackStack() }) {
-                        Text(text = "Save")
-                    }
-                }
+                ControlStrip(nodeId = nodeId, viewModel = viewModel, paramValues = paramValues)
             }
         }
     }
 }
 
 @Composable
-private fun ParameterRow(param: ParameterDefinition, labelWeight: Float = 0.5f) {
+private fun ControlStrip(
+    nodeId: String,
+    viewModel: GraphEditorViewModel,
+    paramValues: Map<String, String>
+) {
+    val navController = LocalNavController.current
+
+    val onSave: () -> Unit = {
+        val nodeParams = NodeParameters(values = paramValues.toMap())
+        viewModel.setNodeParameters(nodeId, nodeParams)
+
+        navController.popBackStack()
+    }
+
+    Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
+        Button(onClick = { navController.popBackStack() }) {
+            Text(text = "Close")
+        }
+
+        Button(onClick = onSave) {
+            Text(text = "Save")
+        }
+    }
+}
+
+@Composable
+private fun ParameterRow(param: ParameterDefinition, value: String, onValueChange: (String) -> Unit) {
     val labelWidthWeight = 0.5f
-    var value by remember { mutableStateOf(param.default ?: "") }
 
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(modifier = Modifier.weight(labelWidthWeight).padding(end = 8.dp)) {
@@ -98,7 +122,7 @@ private fun ParameterRow(param: ParameterDefinition, labelWeight: Float = 0.5f) 
         }
 
         Box(modifier = Modifier.weight(1f - labelWidthWeight)) {
-            Input(value = value, onValueChange = { value = it })
+            Input(value = value, onValueChange = onValueChange)
         }
     }
 }

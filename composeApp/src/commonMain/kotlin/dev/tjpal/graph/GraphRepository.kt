@@ -5,6 +5,7 @@ import dev.tjpal.model.EdgeInstance
 import dev.tjpal.model.ExtendedNodeDefinition
 import dev.tjpal.model.GraphDefinition
 import dev.tjpal.model.NodeInstance
+import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.Position
 import dev.tjpal.util.decodePngBase64ToImageBitmap
 import kotlinx.coroutines.CoroutineScope
@@ -188,6 +189,17 @@ class GraphRepository(
         )
 
         _graph.value = LoadState.Ready(updatedGraph)
+        _loadedGraphWasModified.value = true
+    }
+
+    fun setNodeParameters(nodeId: String, parameters: NodeParameters) {
+        val readyState = _graph.value as? LoadState.Ready
+            ?: throw IllegalStateException("Cannot set node parameters: no current graph loaded")
+        val graph = readyState.data
+
+        val node = graph.nodes.firstOrNull { it.id == nodeId } ?: throw IllegalArgumentException("No node with id: $nodeId")
+        node.parameters = parameters
+
         _loadedGraphWasModified.value = true
     }
 

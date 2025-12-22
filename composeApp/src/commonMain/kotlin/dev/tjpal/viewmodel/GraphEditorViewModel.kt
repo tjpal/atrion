@@ -182,6 +182,12 @@ class GraphEditorViewModel(
         repository.setNodePosition(nodeSpec.id, position.x.toInt(), position.y.toInt())
     }
 
+    fun setNodeParameters(nodeId: String, parameters: NodeParameters) {
+        viewModelScope.launch {
+            repository.setNodeParameters(nodeId, parameters)
+        }
+    }
+
     fun refresh() {
         viewModelScope.launch {
             repository.refresh()
@@ -204,7 +210,7 @@ class GraphEditorViewModel(
             NodeInstance(
                 id = node.id,
                 definitionName = customData.definition.name,
-                parameters = NodeParameters(),
+                parameters = customData.node.parameters,
                 position = Position(
                     x = currentPosition.x.toInt(),
                     y = currentPosition.y.toInt()
