@@ -4,6 +4,7 @@ import dev.tjpal.logging.logger
 import dev.tjpal.model.GraphDefinition
 import dev.tjpal.model.GraphExecutionStatus
 import dev.tjpal.model.NodeInstance
+import dev.tjpal.model.NodeType
 import dev.tjpal.nodes.Node
 import dev.tjpal.nodes.NodeActivationContext
 import dev.tjpal.nodes.NodeDeactivationContext
@@ -227,7 +228,8 @@ class ActiveGraph(
                     graphInstanceId = id,
                     executionId = message.executionId,
                     nodeId = nodeId,
-                    payload = message.payload
+                    payload = message.payload,
+                    graph = this
                 )
 
                 try {
@@ -261,5 +263,17 @@ class ActiveGraph(
                 scheduleNode(target.toNodeId)
             }
         }
+    }
+
+    fun getAttachedToolDefinitionNames(nodeId: String): List<String> {
+        val outgoing = graphDefinition.edges.filter { it.fromNodeId == nodeId }
+
+        val targetNodeDefinitionNames = outgoing.mapNotNull { edge ->
+            graphDefinition.nodes.find { it.id == edge.toNodeId }?.definitionName
+        }.distinct()
+
+        val toolDefinitionNames = nodeRepository.getAllDefinitions().filter { it.type == NodeType.TOOL }.map { it.name }.toSet()
+
+        return targetNodeDefinitionNames.filter { it in toolDefinitionNames }
     }
 }

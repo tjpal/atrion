@@ -7,10 +7,11 @@ import dev.tjpal.config.ConfigModule
 import dev.tjpal.nodes.NodeModule
 import dev.tjpal.graph.StorageModule
 import dev.tjpal.filesystem.FileSystemModule
+import dev.tjpal.tools.ToolsModule
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [ConfigModule::class, NodeModule::class, AIModule::class, StorageModule::class, FileSystemModule::class])
+@Component(modules = [ConfigModule::class, NodeModule::class, AIModule::class, StorageModule::class, FileSystemModule::class, ToolsModule::class])
 interface AppComponent {
     fun app(): App
 }

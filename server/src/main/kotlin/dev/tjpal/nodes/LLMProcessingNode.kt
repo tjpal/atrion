@@ -7,16 +7,19 @@ import dev.tjpal.logging.logger
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeStatus
 import dev.tjpal.model.StatusEntry
+import dev.tjpal.tools.Tool
+import dev.tjpal.tools.ToolRegistry
+import kotlin.reflect.KClass
 
 class LLMProcessingNode(
     private val parameters: NodeParameters,
     private val llm: LLM,
-    private val statusRegistry: StatusRegistry
+    private val statusRegistry: StatusRegistry,
+    private val toolRegistry: ToolRegistry
 ) : Node {
     private val logger = logger<LLMProcessingNode>()
 
     override fun onActivate(context: NodeActivationContext) {
-        // No action
         logger.debug("LLMProcessingNode.onActivate graphInstanceId={} nodeId={}", context.graphInstanceId, context.nodeId)
     }
 
@@ -29,9 +32,20 @@ class LLMProcessingNode(
             val promptTemplate = parameters.values["Prompt"] ?: "{{input}}"
             val resolvedPrompt = promptTemplate.replace("{{input}}", context.payload)
 
+            val toolDefinitionNames = context.graph.getAttachedToolDefinitionNames(context.nodeId)
+
+            val toolKClasses: List<KClass<out Tool>> = toolDefinitionNames.mapNotNull { defName ->
+                val resolved = toolRegistry.resolve(defName)
+                if (resolved == null) {
+                    logger.warn("Unresolved tool referenced by node {}: {}", context.nodeId, defName)
+                }
+                resolved
+            }
+
             val request = Request(
                 input = context.payload,
-                instructions = resolvedPrompt
+                instructions = resolvedPrompt,
+                tools = toolKClasses
             )
 
             logger.debug("LLM request  {}", context.payload)
@@ -41,7 +55,7 @@ class LLMProcessingNode(
 
             chain.delete()
 
-            sendStatusEntry(NodeStatus.FINISHED, null, responsePayload,null, context)
+            sendStatusEntry(NodeStatus.FINISHED, null, responsePayload, null, context)
             output.send("text_out", responsePayload)
             logger.info("LLMProcessingNode finished LLM call for executionId={} nodeId={}", context.executionId, context.nodeId)
         } catch (e: Exception) {
@@ -74,7 +88,6 @@ class LLMProcessingNode(
     }
 
     override fun onStop(context: NodeDeactivationContext) {
-        // No action
         logger.debug("LLMProcessingNode.onStop graphInstanceId={} nodeId={}", context.graphInstanceId, context.nodeId)
     }
 }

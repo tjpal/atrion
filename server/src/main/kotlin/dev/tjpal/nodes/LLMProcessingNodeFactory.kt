@@ -10,11 +10,13 @@ import dev.tjpal.model.NodeType
 import dev.tjpal.model.ParameterDefinition
 import dev.tjpal.model.ParameterType
 import dev.tjpal.utilities.ImageResourceEncoder
+import dev.tjpal.tools.ToolRegistry
 import javax.inject.Inject
 
 class LLMProcessingNodeFactory @Inject constructor(
     private val llm: LLM,
-    private val statusRegistry: StatusRegistry
+    private val statusRegistry: StatusRegistry,
+    private val toolRegistry: ToolRegistry
 ) : NodeFactory {
     override fun definition(): NodeDefinition {
         val resourceEncoder = ImageResourceEncoder()
@@ -27,7 +29,7 @@ class LLMProcessingNodeFactory @Inject constructor(
             icon = resourceEncoder.encodeResourceToBase64("placeholder-2.png"),
             inputConnectors = listOf(ConnectorDefinition(id = "in", label = "In", schema = ConnectorSchema.TEXT)),
             outputConnectors = listOf(ConnectorDefinition(id = "text_out", label = "Out", schema = ConnectorSchema.TEXT)),
-            toolConnectors = emptyList(),
+            toolConnectors = listOf(ConnectorDefinition(id = "tool", label = "Tool", schema = ConnectorSchema.JSON)),
             debugConnectors = emptyList(),
             parameters = listOf(ParameterDefinition(
                 name = "Prompt",
@@ -39,6 +41,6 @@ class LLMProcessingNodeFactory @Inject constructor(
     }
 
     override fun createNode(parameters: NodeParameters): Node {
-        return LLMProcessingNode(parameters, llm, statusRegistry)
+        return LLMProcessingNode(parameters, llm, statusRegistry, toolRegistry)
     }
 }

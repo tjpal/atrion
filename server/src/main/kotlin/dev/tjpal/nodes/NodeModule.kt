@@ -20,4 +20,9 @@ abstract class NodeModule {
     @IntoMap
     @NodeFactoryKey("Sink Output")
     abstract fun bindOutputSinkNodeFactory(factory: OutputSinkNodeFactory): NodeFactory
+
+    @Binds
+    @IntoMap
+    @NodeFactoryKey("HelloWorld Tool")
+    abstract fun bindHelloWorldToolNodeFactory(factory: HelloWorldToolNodeFactory): NodeFactory
 }
