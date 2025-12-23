@@ -32,8 +32,6 @@ import dev.tjpal.ui.navigation.LocalNavController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlin.math.abs
-import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -68,15 +66,6 @@ class GraphEditorViewModel(
 
     val nodeDefinitions = repository.nodeDefinitions
     val isModified = repository.loadedGraphWasModified
-
-    // Simple incremental id counter for commonMain (multiplatform friendly)
-    private var idCounter: Long = 0L
-
-    private fun generateNodeId(): String {
-        val rnd = abs(Random.nextLong())
-        val counter = idCounter++
-        return "node-$counter-$rnd"
-    }
 
     init {
         viewModelScope.launch {
