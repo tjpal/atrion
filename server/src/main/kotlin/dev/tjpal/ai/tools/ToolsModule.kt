@@ -1,4 +1,4 @@
-package dev.tjpal.tools
+package dev.tjpal.ai.tools
 
 import dagger.Module
 import dagger.Provides

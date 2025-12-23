@@ -2,13 +2,13 @@ package dev.tjpal.nodes
 
 import dev.tjpal.ai.LLM
 import dev.tjpal.ai.Request
+import dev.tjpal.ai.tools.Tool
+import dev.tjpal.ai.tools.ToolRegistry
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.logging.logger
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeStatus
 import dev.tjpal.model.StatusEntry
-import dev.tjpal.tools.Tool
-import dev.tjpal.tools.ToolRegistry
 import kotlin.reflect.KClass
 
 class LLMProcessingNode(

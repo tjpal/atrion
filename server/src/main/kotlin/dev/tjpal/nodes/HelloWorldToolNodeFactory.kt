@@ -1,13 +1,13 @@
 package dev.tjpal.nodes
 
+import dev.tjpal.ai.tools.ToolInfo
+import dev.tjpal.ai.tools.ToolRegistry
 import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeType
 import dev.tjpal.tools.HelloWorldTool
-import dev.tjpal.tools.ToolInfo
-import dev.tjpal.tools.ToolRegistry
 import dev.tjpal.utilities.ImageResourceEncoder
 import javax.inject.Inject
 
@@ -15,7 +15,7 @@ class HelloWorldToolNodeFactory @Inject constructor(
     private val toolRegistry: ToolRegistry
 ) : NodeFactory {
 
-    private val toolName = "HelloWorld Tool"
+    private val toolName = "HelloWorldTool"
 
     override fun definition(): NodeDefinition {
         val resourceEncoder = ImageResourceEncoder()

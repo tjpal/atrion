@@ -232,14 +232,14 @@ class GraphEditorViewModel(
     /**
      * Maps business logic nodes to UI state nodes
      */
-    private fun mapNodes(nodes: List<NodeInstance>): List<NodeSpec> = nodes.map { node ->
+    private fun mapNodes(nodes: List<NodeInstance>): List<NodeSpec> = nodes.mapNotNull { node ->
         val nodeDefinition = when (val nodeDefinitions = repository.nodeDefinitions.value) {
             is LoadState.Ready -> nodeDefinitions.data.firstOrNull { it.definition.name == node.definitionName }
             else -> null
         }
 
         if(nodeDefinition == null) {
-            return@mapNodes emptyList()
+            return@mapNotNull null
         }
 
         val connectors = buildConnectorsFromDefinition(nodeDefinition)

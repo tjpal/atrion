@@ -1,4 +1,4 @@
-package dev.tjpal.tools
+package dev.tjpal.ai.tools
 
 import dev.tjpal.logging.logger
 import java.util.concurrent.ConcurrentHashMap
@@ -24,8 +24,4 @@ class ToolRegistry @Inject constructor() {
     fun resolve(definitionName: String): KClass<out Tool>? {
         return map[definitionName]?.toolClass
     }
-
-    fun getInfo(definitionName: String): ToolInfo? = map[definitionName]
-
-    fun listAll(): List<ToolInfo> = map.values.toList()
 }

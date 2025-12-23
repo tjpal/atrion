@@ -6,6 +6,7 @@ import com.openai.models.audio.AudioModel
 import com.openai.models.audio.transcriptions.TranscriptionCreateParams
 import dev.tjpal.ai.LLM
 import dev.tjpal.ai.RequestResponseChain
+import dev.tjpal.ai.tools.ToolRegistry
 import dev.tjpal.config.Config
 import dev.tjpal.logging.logger
 import java.io.IOException
@@ -16,7 +17,10 @@ import javax.inject.Singleton
 import kotlin.io.path.Path
 
 @Singleton
-class OpenAILLM @Inject constructor(private val config: Config) : LLM {
+class OpenAILLM @Inject constructor(
+    private val config: Config,
+    private val toolRegistry: ToolRegistry
+) : LLM {
     private val logger = logger<OpenAILLM>()
     private val client = buildClientFromFile()
 
@@ -32,7 +36,7 @@ class OpenAILLM @Inject constructor(private val config: Config) : LLM {
     }
 
     override fun createResponseRequestChain(): RequestResponseChain {
-        val result = OpenAIRequestResponseChain(client)
+        val result = OpenAIRequestResponseChain(client, toolRegistry)
         result.create()
 
         logger.debug("OpenAI RequestResponseChain created")
@@ -62,7 +66,7 @@ class OpenAILLM @Inject constructor(private val config: Config) : LLM {
         val transcription = transcriptionResponse.asTranscription()
 
         val text = transcription.text()
-        logger.debug("Transcription completed: ${text.take(100)}...")
+        logger.debug("Transcription completed: ${'$'}{text.take(100)}...")
         return text
     }
 }

@@ -1,6 +1,7 @@
 package dev.tjpal.nodes
 
 import dev.tjpal.ai.LLM
+import dev.tjpal.ai.tools.ToolRegistry
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.ConnectorSchema
@@ -10,7 +11,6 @@ import dev.tjpal.model.NodeType
 import dev.tjpal.model.ParameterDefinition
 import dev.tjpal.model.ParameterType
 import dev.tjpal.utilities.ImageResourceEncoder
-import dev.tjpal.tools.ToolRegistry
 import javax.inject.Inject
 
 class LLMProcessingNodeFactory @Inject constructor(
