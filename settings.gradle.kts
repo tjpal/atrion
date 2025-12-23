@@ -26,6 +26,9 @@ dependencyResolutionManagement {
         }
         mavenCentral()
         mavenLocal()
+        maven {
+            url = uri("https://maven.artifacts.atlassian.com")
+        }
     }
 }
 
