@@ -1,14 +1,8 @@
 package dev.tjpal.viewmodel
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import dev.tjpal.composition.foundation.basics.functional.Button
-import dev.tjpal.composition.foundation.basics.text.Text
 import dev.tjpal.composition.foundation.structure.graphs.Connector
 import dev.tjpal.composition.foundation.structure.graphs.EdgeSide
 import dev.tjpal.composition.foundation.structure.graphs.EdgeSpec
@@ -24,11 +18,10 @@ import dev.tjpal.model.GraphDefinition
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeInstance
 import dev.tjpal.model.NodeParameters
+import dev.tjpal.model.NodeType
 import dev.tjpal.model.Position
 import dev.tjpal.model.StatusEntry
-import dev.tjpal.ui.StatusIcon
-import dev.tjpal.ui.navigation.ConfigureNodeDialogRoute
-import dev.tjpal.ui.navigation.LocalNavController
+import dev.tjpal.ui.NodeContent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -249,7 +242,7 @@ class GraphEditorViewModel(
             return@mapNodes emptyList()
         }
 
-        val connectors =  buildConnectorsFromDefinition(nodeDefinition)
+        val connectors = buildConnectorsFromDefinition(nodeDefinition)
 
         NodeSpec(
             id = node.id,
@@ -259,26 +252,13 @@ class GraphEditorViewModel(
             connectors = connectors,
             associatedData = NodeCustomData(node, nodeDefinition.definition),
             content = { _ ->
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(node.definitionName)
-
-                    val activeGraph = activeGraphService.activeGraph.collectAsStateWithLifecycle()
-                    val isInEditMode = activeGraph.value == null
-
-                    if(isInEditMode) {
-                        val navController = LocalNavController.current
-
-                        Button(onClick = { navController.navigate(ConfigureNodeDialogRoute(node.id)) }) {
-                            Text("Configure")
-                        }
-
-                        Button(onClick = { repository.removeNode(node.id) }) {
-                            Text("Delete")
-                        }
-                    } else {
-                        StatusIcon(node.id, this@GraphEditorViewModel)
-                    }
-                }
+                NodeContent(
+                    node = node,
+                    definition = nodeDefinition.definition,
+                    activeGraphService = activeGraphService,
+                    graphRepository = repository,
+                    viewModel = this,
+                )
             },
         )
     }
@@ -304,10 +284,13 @@ class GraphEditorViewModel(
             }
         }
 
+        val toolConnectorSide = if(nodeDefinition.definition.type == NodeType.TOOL) EdgeSide.TOP else EdgeSide.BOTTOM
+        val monitorConnectorSide = if(nodeDefinition.definition.type == NodeType.MONITOR) EdgeSide.BOTTOM else EdgeSide.TOP
+
         build(nodeDefinition.definition.inputConnectors, EdgeSide.LEFT)
         build(nodeDefinition.definition.outputConnectors, EdgeSide.RIGHT)
-        build(nodeDefinition.definition.toolConnectors, EdgeSide.BOTTOM)
-        build(nodeDefinition.definition.debugConnectors, EdgeSide.TOP)
+        build(nodeDefinition.definition.toolConnectors, toolConnectorSide)
+        build(nodeDefinition.definition.debugConnectors, monitorConnectorSide)
 
         return list
     }
