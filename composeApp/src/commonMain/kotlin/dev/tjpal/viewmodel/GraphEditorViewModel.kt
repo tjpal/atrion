@@ -8,6 +8,7 @@ import dev.tjpal.composition.foundation.structure.graphs.EdgeSide
 import dev.tjpal.composition.foundation.structure.graphs.EdgeSpec
 import dev.tjpal.composition.foundation.structure.graphs.GraphState
 import dev.tjpal.composition.foundation.structure.graphs.NodeSpec
+import dev.tjpal.composition.foundation.themes.tokens.NodeShape
 import dev.tjpal.graph.ActiveGraphService
 import dev.tjpal.graph.GraphRepository
 import dev.tjpal.graph.LoadState
@@ -251,6 +252,7 @@ class GraphEditorViewModel(
             heightMultiplier = 6,
             connectors = connectors,
             associatedData = NodeCustomData(node, nodeDefinition.definition),
+            shape = getNodeShape(nodeDefinition.definition),
             content = { _ ->
                 NodeContent(
                     node = node,
@@ -293,5 +295,15 @@ class GraphEditorViewModel(
         build(nodeDefinition.definition.debugConnectors, monitorConnectorSide)
 
         return list
+    }
+
+    private fun getNodeShape(nodeDefinition: NodeDefinition): NodeShape {
+        return when(nodeDefinition.type) {
+            NodeType.INPUT -> NodeShape.LEFT_ROUNDED
+            NodeType.OUTPUT -> NodeShape.RIGHT_ROUNDED
+            NodeType.PROCESSOR -> NodeShape.RECTANGLE
+            NodeType.TOOL -> NodeShape.CIRCLE
+            NodeType.MONITOR -> NodeShape.CIRCLE
+        }
     }
 }
