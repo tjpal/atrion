@@ -41,7 +41,7 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
     val associatedData = nodeSpec?.associatedData as? NodeCustomData ?: return
     val parameters = associatedData.definition.parameters
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0x80000000))) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .size(width = 600.dp, height = 400.dp)
