@@ -254,13 +254,7 @@ class GraphEditorViewModel(
             associatedData = NodeCustomData(node, nodeDefinition.definition),
             shape = getNodeShape(nodeDefinition.definition),
             content = { _ ->
-                NodeContent(
-                    node = node,
-                    definition = nodeDefinition.definition,
-                    activeGraphService = activeGraphService,
-                    graphRepository = repository,
-                    viewModel = this,
-                )
+                NodeContent(node = node, viewModel = this)
             },
         )
     }

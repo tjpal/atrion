@@ -13,6 +13,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tjpal.composition.foundation.basics.functional.Button
 import dev.tjpal.composition.foundation.basics.text.Text
 import dev.tjpal.composition.foundation.structure.graphs.GraphEditor
+import dev.tjpal.composition.foundation.structure.graphs.NodeSpec
 import dev.tjpal.composition.foundation.templates.FloatingBarTemplate
 import dev.tjpal.composition.foundation.templates.WaitingTemplate
 import dev.tjpal.composition.foundation.themes.cascade.Cascade
@@ -20,8 +21,11 @@ import dev.tjpal.composition.foundation.themes.tokens.FloatingBarLocation
 import dev.tjpal.composition.foundation.utilities.zoom.InitialScaleMode
 import dev.tjpal.graph.LoadState
 import dev.tjpal.ui.FunctionBar
+import dev.tjpal.ui.navigation.ConfigureNodeDialogRoute
+import dev.tjpal.ui.navigation.LocalNavController
 import dev.tjpal.ui.navigation.Navigation
 import dev.tjpal.viewmodel.GraphEditorViewModel
+import dev.tjpal.viewmodel.NodeCustomData
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -54,6 +58,12 @@ fun ErrorScreen(errorState: LoadState.Error, viewModel: GraphEditorViewModel) {
 @Composable
 fun GraphEditScreen(viewModel: GraphEditorViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val navController = LocalNavController.current
+
+    val onNodeSelected: (node: NodeSpec) -> Unit = { node ->
+        val associatedData = node.associatedData as NodeCustomData
+        navController.navigate(ConfigureNodeDialogRoute(associatedData.node.id))
+    }
 
     FloatingBarTemplate(
         location = FloatingBarLocation.BOTTOM,
@@ -74,7 +84,8 @@ fun GraphEditScreen(viewModel: GraphEditorViewModel) {
                     initialScaleMode = InitialScaleMode.DEFAULT,
                     onConnect = viewModel::onConnect,
                     onDisconnect = viewModel::onDisconnect,
-                    onNodeDragFinished = viewModel::setNodePosition
+                    onNodeDragFinished = viewModel::setNodePosition,
+                    onNodeTapped = onNodeSelected
                 )
             }
         }
