@@ -1,16 +1,16 @@
 package dev.tjpal
 
+import dev.tjpal.api.route.KtorRouteRegistrar
+import dev.tjpal.api.route.RouteRegistrarHolder
 import dev.tjpal.api.route.definitionsRoute
 import dev.tjpal.api.route.executionsRoute
 import dev.tjpal.api.route.graphsRoute
 import dev.tjpal.api.route.outputsRoute
-import dev.tjpal.api.route.restInputRoutes
 import dev.tjpal.api.route.statusesRoute
 import dev.tjpal.config.Config
 import dev.tjpal.graph.ActiveGraphRepository
 import dev.tjpal.graph.ExecutionOutputStore
 import dev.tjpal.graph.GraphDefinitionRepository
-import dev.tjpal.graph.hooks.RestInputRegistry
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.nodes.NodeRepository
 import io.ktor.serialization.kotlinx.json.json
@@ -33,13 +33,11 @@ import javax.inject.Inject
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 
-
 class App @Inject constructor(
     private val config: Config,
     private val nodeRepository: NodeRepository,
     private val graphRepository: GraphDefinitionRepository,
     private val activeGraphRepository: ActiveGraphRepository,
-    private val restInputRegistry: RestInputRegistry,
     private val executionOutputStore: ExecutionOutputStore,
     private val statusRegistry: StatusRegistry
 ) {
@@ -63,7 +61,7 @@ class App @Inject constructor(
                 }
             },
             module = {
-                module(nodeRepository, graphRepository, activeGraphRepository, restInputRegistry, executionOutputStore, statusRegistry)
+                module(nodeRepository, graphRepository, activeGraphRepository, executionOutputStore, statusRegistry)
             }
         )
 
@@ -89,7 +87,6 @@ fun Application.module(
     nodeRepository: NodeRepository,
     graphRepository: GraphDefinitionRepository,
     activeGraphRepository: ActiveGraphRepository,
-    restInputRegistry: RestInputRegistry,
     executionOutputStore: ExecutionOutputStore,
     statusRegistry: StatusRegistry
 ) {
@@ -109,10 +106,11 @@ fun Application.module(
     }
 
     routing {
+        RouteRegistrarHolder.setRegistrar(KtorRouteRegistrar(this, this@module))
+
         definitionsRoute(nodeRepository)
         graphsRoute(graphRepository)
         executionsRoute(graphRepository, activeGraphRepository)
-        restInputRoutes(restInputRegistry)
         outputsRoute(executionOutputStore)
         statusesRoute(statusRegistry, defaultJson)
     }

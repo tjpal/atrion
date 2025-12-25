@@ -53,13 +53,13 @@ class ActiveGraph(
     )
 
     /**
-     * Activate the graph: build mailboxes, adjacency map, and call onActivate on all nodes to allow them to register external hooks.
+     * Activate the graph: build mailboxes, adjacency map, and create persistent input node instances.
      */
     fun activate() {
         logger.info("Activating graph execution {} (graphId={})", id, graphId)
         createMailboxes()
         buildAdjacencyMap()
-        callOnActivateOnNodes()
+        createPersistentInputNodes()
     }
 
     private fun createMailboxes() {
@@ -79,25 +79,47 @@ class ActiveGraph(
         logger.debug("Adjacency map built with {} entries for execution {}", adjacency.size, id)
     }
 
-    private fun callOnActivateOnNodes() {
+    private fun createPersistentInputNodes() {
+        val allDefinitions = nodeRepository.getAllDefinitions()
+
         for (nodeDef in graphDefinition.nodes) {
+            if (nodeDef.definitionName.isBlank()) continue
+
             try {
-                val nodeInstance = nodeRepository.createNodeInstance(
-                    nodeDef.definitionName,
-                    nodeDef.parameters
-                )
+                // Determine node type by resolving the node definition via repository
+                val definition = allDefinitions.find { it.name == nodeDef.definitionName }
+                val isInput = definition?.type == NodeType.INPUT
 
-                val context = NodeActivationContext(
-                    graphInstanceId = id,
-                    nodeId = nodeDef.id,
-                    parameters = nodeDef.parameters,
-                    graph = this
-                )
+                if (isInput) {
+                    val nodeInstance = nodeRepository.createNodeInstance(
+                        nodeDef.definitionName,
+                        nodeDef.parameters
+                    )
 
-                nodeInstance.onActivate(context)
-                logger.debug("Activated node {} for execution {}", nodeDef.id, id)
+                    val context = NodeActivationContext(
+                        graphInstanceId = id,
+                        nodeId = nodeDef.id,
+                        parameters = nodeDef.parameters,
+                        graph = this
+                    )
+
+                    try {
+                        nodeInstance.onActivate(context)
+                    } catch (e: Exception) {
+                        logger.error("Error during onActivate for persistent input node {}", nodeDef.id, e)
+                        continue
+                    }
+
+                    val job = scope.launch {
+                        processMailboxLoop(nodeDef.id, nodeInstance)
+                    }
+
+                    runtimeNodes[nodeDef.id] = NodeRuntimeHolder(node = nodeInstance, workerJob = job)
+
+                    logger.debug("Persistent input node created and worker started for node {} in execution {}", nodeDef.id, id)
+                }
             } catch (e: Exception) {
-                logger.error("Error activating node {}", nodeDef.id, e)
+                logger.error("Error creating persistent input node {}", nodeDef.id, e)
             }
         }
     }
@@ -107,35 +129,13 @@ class ActiveGraph(
 
         logger.info("Stopping graph execution {} (graphId={})", id, graphId)
 
+        // Cancel worker jobs; their finally blocks will perform onStop for their node instances.
         cancelAndStopRuntimeWorkers()
 
         mailboxes.values.forEach { it.close() }
         mailboxes.clear()
 
         scope.cancel()
-
-        callStopOnNodes()
-    }
-
-    private fun callStopOnNodes() {
-        for (nodeDef in graphDefinition.nodes) {
-            try {
-                val nodeInstance = nodeRepository.createNodeInstance(
-                    nodeDef.definitionName,
-                    nodeDef.parameters
-                )
-
-                val context = NodeDeactivationContext(
-                    graphInstanceId = id,
-                    nodeId = nodeDef.id
-                )
-
-                nodeInstance.onStop(context)
-                logger.debug("Stopped node {} for execution {}", nodeDef.id, id)
-            } catch (e: Exception) {
-                logger.error("Error stopping node {}", nodeDef.id, e)
-            }
-        }
     }
 
     private fun cancelAndStopRuntimeWorkers() {
@@ -182,6 +182,19 @@ class ActiveGraph(
                 nodeDefinition.definitionName,
                 nodeDefinition.parameters
             )
+
+            val activationContext = NodeActivationContext(
+                graphInstanceId = id,
+                nodeId = nodeDefinition.id,
+                parameters = nodeDefinition.parameters,
+                graph = this
+            )
+
+            try {
+                nodeInstance.onActivate(activationContext)
+            } catch (e: Exception) {
+                logger.error("Error during onActivate for transient node {}", nodeId, e)
+            }
 
             val job = scope.launch {
                 processMailboxLoop(nodeId, nodeInstance)
@@ -240,8 +253,22 @@ class ActiveGraph(
                 }
             }
         } finally {
-            runtimeNodes.remove(nodeId)
-            logger.info("Worker coroutine stopped for node {} in execution {}", nodeId, id)
+            try {
+                // Ensure node lifecycle cleanup is invoked for the instance that was running in this worker.
+                val deactivationContext = NodeDeactivationContext(
+                    graphInstanceId = id,
+                    nodeId = nodeId
+                )
+
+                try {
+                    nodeInstance.onStop(deactivationContext)
+                } catch (e: Exception) {
+                    logger.error("Error during onStop for node {} in execution {}", nodeId, id, e)
+                }
+            } finally {
+                runtimeNodes.remove(nodeId)
+                logger.info("Worker coroutine stopped for node {} in execution {}", nodeId, id)
+            }
         }
     }
 
@@ -263,6 +290,10 @@ class ActiveGraph(
                 scheduleNode(target.toNodeId)
             }
         }
+    }
+
+    fun routeFromNode(fromNodeId: String, fromConnectorId: String, payload: String, executionId: String) {
+        routeOutput(fromNodeId, fromConnectorId, payload, executionId)
     }
 
     fun getAttachedToolDefinitionNames(nodeId: String): List<String> {
