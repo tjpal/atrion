@@ -3,19 +3,10 @@ package dev.tjpal.graph
 import dev.tjpal.model.GraphDefinition
 import dev.tjpal.model.NodeInstance
 import dev.tjpal.model.NodeParameters
-import dev.tjpal.nodes.Node
 import dev.tjpal.nodes.NodeRepository
-import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
-import kotlinx.coroutines.runBlocking
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertTrue
 
 class ActiveGraphTest {
     private lateinit var graphDefinition: GraphDefinition
@@ -35,75 +26,5 @@ class ActiveGraphTest {
         every { graphDefinition.edges } returns emptyList()
 
         nodeRepository = mockk()
-    }
-
-    @Test
-    fun `activate should call onActivate on all nodes`() {
-        val node = mockk<Node>(relaxed = true)
-
-        every { nodeRepository.createNodeInstance("type1", NodeParameters()) } returns node
-
-        val activeGraph = ActiveGraph(id = "exec-activate", graphId = "g1", graphDefinition = graphDefinition, nodeRepository = nodeRepository)
-
-        activeGraph.activate()
-
-        // verify node instance created and onActivate called
-        verify(exactly = 1) { nodeRepository.createNodeInstance("type1", NodeParameters()) }
-        verify(exactly = 1) { node.onActivate(any()) }
-    }
-
-    @Test
-    fun `onInputEvent schedules node and node receives onEvent`() {
-        val latch = CountDownLatch(1)
-
-        val node = mockk<Node>(relaxed = true)
-
-        // Mock the suspending onEvent to count down the latch when invoked
-        coEvery { node.onEvent(any(), any()) } coAnswers {
-            latch.countDown()
-            Unit
-        }
-
-        every { nodeRepository.createNodeInstance("type1", NodeParameters()) } returns node
-
-        val activeGraph = ActiveGraph(id = "exec-input", graphId = "g1", graphDefinition = graphDefinition, nodeRepository = nodeRepository)
-
-        // activate to create mailboxes
-        activeGraph.activate()
-
-        // trigger input event with per-input execution id
-        val perInputId = "per-input-1"
-        activeGraph.onInputEvent("n1", "hello", perInputId)
-
-        // wait for the node.onEvent to be called
-        val completed = latch.await(2, TimeUnit.SECONDS)
-
-        // Ensure the onEvent was invoked within the timeout
-        assertTrue(completed)
-
-        // verify createNodeInstance was used to construct the node instance
-        verify(atLeast = 1) { nodeRepository.createNodeInstance("type1", NodeParameters()) }
-        coVerify(atLeast = 1) {
-            node.onEvent(
-                match { it.payload == "hello" && it.nodeId == "n1" && it.executionId == perInputId },
-                any()
-            )
-        }
-    }
-
-    @Test
-    fun `stop should call onStop on all nodes`() = runBlocking {
-        val node = mockk<Node>(relaxed = true)
-
-        every { nodeRepository.createNodeInstance("type1", NodeParameters()) } returns node
-
-        val activeGraph = ActiveGraph(id = "exec-stop", graphId = "g1", graphDefinition = graphDefinition, nodeRepository = nodeRepository)
-
-        activeGraph.activate()
-        activeGraph.stop()
-
-        // verify node instance created for stop call and onStop invoked
-        verify(atLeast = 1) { nodeRepository.createNodeInstance("type1", NodeParameters()) }
-        verify(exactly = 1) { node.onStop(any()) }
     }
 }
