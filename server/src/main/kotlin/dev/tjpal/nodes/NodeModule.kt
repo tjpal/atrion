@@ -3,6 +3,7 @@ package dev.tjpal.nodes
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
+import dev.tjpal.nodes.jira.JiraToolNodeFactory
 
 @Module
 abstract class NodeModule {
@@ -30,4 +31,9 @@ abstract class NodeModule {
     @IntoMap
     @NodeFactoryKey("Jira Polling Input")
     abstract fun bindJiraPollingNodeFactory(factory: dev.tjpal.nodes.jira.JiraPollingNodeFactory): NodeFactory
+
+    @Binds
+    @IntoMap
+    @NodeFactoryKey("Jira Tool")
+    abstract fun bindJiraToolNodeFactory(factory: JiraToolNodeFactory): NodeFactory
 }
