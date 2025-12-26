@@ -64,7 +64,9 @@ class FileSystemGraphDefinitionRepositoryTest {
             udsPath = "/tmp/atrion.socket",
             storageDirectory = baseDirectory.toString(),
             openAICredentialPath = "",
-            statusRetentionEntries = 10
+            statusRetentionEntries = 10,
+            secretsDirectory = baseDirectory.resolve("secrets").toString(),
+            secretsMasterKeyPath = baseDirectory.resolve("master.key").toString()
         )
         repository = FileSystemGraphDefinitionRepository(config, json, fileSystemService)
     }

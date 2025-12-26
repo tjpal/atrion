@@ -9,5 +9,7 @@ data class Config(
     val udsPath: String,
     val storageDirectory: String,
     val openAICredentialPath: String,
-    val statusRetentionEntries: Int
+    val statusRetentionEntries: Int,
+    val secretsDirectory: String,
+    val secretsMasterKeyPath: String
 )
