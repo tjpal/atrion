@@ -154,8 +154,16 @@ class OpenAIRequestResponseChain(
                 throw IllegalStateException(msg)
             }
 
-            val toolInstance = deserializeTool(functionCall)
-            val toolOutput = executeTool(toolInstance, functionName, functionCall.callId())
+            val nodeParams: JsonElement? = request.toolStaticParameters?.get(functionName)
+
+            val toolOutput: String = try {
+                logger.info("Invoking tool {} with arguments={} nodeParams={}", functionName, parsedArguments, nodeParams)
+                toolRegistry.invokeTool(functionName, parsedArguments, nodeParams)
+            } catch (e: Exception) {
+                val msg = "Tool invocation failed for $functionName: ${e.message}"
+                logger.error(msg, e)
+                throw IllegalStateException(msg, e)
+            }
 
             logger.info(
                 "Tool {} executed successfully callId={} outputPreview={}",

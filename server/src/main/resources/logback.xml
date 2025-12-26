@@ -28,6 +28,9 @@
   <logger name="org.slf4j" level="OFF" />
   <logger name="ch.qos.logback" level="OFF" />
   <logger name="org.slf4j.impl" level="OFF" />
+  <logger name="org.apache.http" level="OFF" additivity="false">
+    <appender-ref ref="STDOUT" />
+  </logger>
 
   <logger name="dev.tjpal" level="DEBUG" />
 

@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.openai)
     implementation(libs.jira.rest.api)
     implementation(libs.jira.rest.core)
+    implementation(libs.jira.fugue)
 
     testImplementation(libs.kotlin.testJunit)
     testImplementation(libs.mockk)
