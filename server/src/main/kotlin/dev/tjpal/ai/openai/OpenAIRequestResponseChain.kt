@@ -3,17 +3,15 @@ package dev.tjpal.ai.openai
 import com.openai.client.OpenAIClient
 import com.openai.models.conversations.Conversation
 import com.openai.models.responses.ResponseCreateParams
-import com.openai.models.responses.ResponseFunctionToolCall
 import com.openai.models.responses.ResponseInputItem
 import com.openai.models.responses.ResponseOutputItem
 import dev.tjpal.ai.Request
 import dev.tjpal.ai.RequestResponseChain
 import dev.tjpal.ai.Response
-import dev.tjpal.ai.tools.Tool
-import dev.tjpal.ai.tools.ToolDeserializationUtil
 import dev.tjpal.ai.tools.ToolRegistry
 import dev.tjpal.logging.logger
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 
 class OpenAIRequestResponseChain(
     private val client: OpenAIClient,
@@ -59,7 +57,7 @@ class OpenAIRequestResponseChain(
                 break
             }
 
-            itemsToSend = processFunctionCalls(functionCallItems)
+            itemsToSend = processFunctionCalls(functionCallItems, request)
         }
 
         val finalMessage = extractMessage(lastApiResponse)
@@ -139,7 +137,7 @@ class OpenAIRequestResponseChain(
         return client.responses().create(builder.build())
     }
 
-    private fun processFunctionCalls(functionCallItems: List<ResponseOutputItem>): List<ResponseInputItem> {
+    private fun processFunctionCalls(functionCallItems: List<ResponseOutputItem>, request: Request): List<ResponseInputItem> {
         val nextItems = mutableListOf<ResponseInputItem>()
 
         for (item in functionCallItems) {
@@ -147,11 +145,12 @@ class OpenAIRequestResponseChain(
             val functionName = functionCall.name()
             logger.info("Model requested function call name={} callId={}", functionName, functionCall.callId())
 
-            val toolClass = toolRegistry.resolve(functionName)
-            if (toolClass == null) {
-                val msg = "No tool registered for function name: $functionName"
-                logger.error(msg)
-                throw IllegalStateException(msg)
+            val parsedArguments: JsonElement? = try {
+                val rawArgs = functionCall.arguments()
+                json.parseToJsonElement(rawArgs)
+            } catch (e: Exception) {
+                logger.error("Failed to parse function call arguments for {}: {}", functionName, e.message)
+                null
             }
 
             val nodeParams: JsonElement? = request.toolStaticParameters?.get(functionName)
@@ -172,7 +171,6 @@ class OpenAIRequestResponseChain(
                 toolOutput.take(200)
             )
 
-            // When using a conversation, do not re-send the functionCall item
             nextItems.add(
                 ResponseInputItem.ofFunctionCallOutput(
                     ResponseInputItem.FunctionCallOutput.builder()
@@ -184,25 +182,6 @@ class OpenAIRequestResponseChain(
         }
 
         return nextItems
-    }
-
-    private fun deserializeTool(functionCall: ResponseFunctionToolCall): Tool {
-        val functionName = functionCall.name()
-        val toolClass = toolRegistry.resolve(functionName)
-            ?: throw IllegalStateException("No tool registered for function name: $functionName")
-
-        return ToolDeserializationUtil.deserialize(toolClass, json.parseToJsonElement(functionCall.arguments()))
-    }
-
-    private fun executeTool(tool: Tool, functionName: String, callId: String): String {
-        return try {
-            logger.debug("Executing tool {}", functionName)
-            tool.execute()
-        } catch (e: Exception) {
-            val msg = "Tool execution failed for $functionName (callId=$callId): ${e.message}"
-            logger.error(msg, e)
-            throw IllegalStateException(msg, e)
-        }
     }
 
     private fun extractMessage(response: com.openai.models.responses.Response): String {

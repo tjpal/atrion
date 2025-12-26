@@ -1,13 +1,12 @@
 package dev.tjpal.nodes
 
-import dev.tjpal.ai.tools.ToolInfo
 import dev.tjpal.ai.tools.ToolRegistry
 import dev.tjpal.model.ConnectorDefinition
 import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeType
-import dev.tjpal.tools.HelloWorldTool
+import dev.tjpal.tools.HelloWorldToolFactory
 import dev.tjpal.utilities.ImageResourceEncoder
 import javax.inject.Inject
 
@@ -43,8 +42,6 @@ class HelloWorldToolNodeFactory @Inject constructor(
     }
 
     init {
-        val info = ToolInfo(definitionName = toolName, toolClass = HelloWorldTool::class)
-
-        toolRegistry.register(toolName, info)
+        toolRegistry.registerFactory(toolName, HelloWorldToolFactory())
     }
 }

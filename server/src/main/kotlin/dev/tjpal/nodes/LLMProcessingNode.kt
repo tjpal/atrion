@@ -9,13 +9,17 @@ import dev.tjpal.logging.logger
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeStatus
 import dev.tjpal.model.StatusEntry
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.reflect.KClass
 
 class LLMProcessingNode(
     private val parameters: NodeParameters,
     private val llm: LLM,
     private val statusRegistry: StatusRegistry,
-    private val toolRegistry: ToolRegistry
+    private val toolRegistry: ToolRegistry,
+    private val json: Json
 ) : Node {
     private val logger = logger<LLMProcessingNode>()
 
@@ -32,20 +36,35 @@ class LLMProcessingNode(
             val promptTemplate = parameters.values["Prompt"] ?: "{{input}}"
             val resolvedPrompt = promptTemplate.replace("{{input}}", context.payload)
 
-            val toolDefinitionNames = context.graph.getAttachedToolDefinitionNames(context.nodeId)
+            // Gather attached tools and their node-level parameters (serialized into JSON elements)
+            val attached = context.graph.getAttachedToolDefinitionsWithParameters(context.nodeId)
+            val toolDefinitionNames: List<String> = attached.map { it.first }
 
+            // Build list of KClass for tools by asking the registry/service for the class to pass to the OpenAI builder
             val toolKClasses: List<KClass<out Tool>> = toolDefinitionNames.mapNotNull { defName ->
-                val resolved = toolRegistry.resolve(defName)
+                val resolved = toolRegistry.getToolClass(defName)
                 if (resolved == null) {
                     logger.warn("Unresolved tool referenced by node {}: {}", context.nodeId, defName)
                 }
                 resolved
             }
 
+            // Build toolsMetadata map (tool definition name -> nodeParameters JSON)
+            val toolsMetadata: Map<String, JsonElement> = attached.mapNotNull { (defName, nodeParams) ->
+                try {
+                    val elem = json.encodeToJsonElement(nodeParams.values)
+                    Pair(defName, elem)
+                } catch (e: Exception) {
+                    logger.warn("Failed to serialize node parameters for tool {} on node {}: {}", defName, context.nodeId, e.message)
+                    null
+                }
+            }.toMap()
+
             val request = Request(
                 input = context.payload,
                 instructions = resolvedPrompt,
-                tools = toolKClasses
+                tools = toolKClasses,
+                toolStaticParameters = if (toolsMetadata.isEmpty()) null else toolsMetadata
             )
 
             logger.debug("LLM request  {}", context.payload)

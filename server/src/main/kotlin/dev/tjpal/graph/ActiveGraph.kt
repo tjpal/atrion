@@ -307,4 +307,31 @@ class ActiveGraph(
 
         return targetNodeDefinitionNames.filter { it in toolDefinitionNames }
     }
+
+    /**
+     * Returns a list of pairs (toolDefinitionName, nodeParameters) for tool nodes that are directly
+     * attached to the outputs of the given nodeId. The method filters only nodes whose definition
+     * corresponds to a registered tool type.
+     */
+    fun getAttachedToolDefinitionsWithParameters(nodeId: String): List<Pair<String, dev.tjpal.model.NodeParameters>> {
+        // Find all outgoing edges from the node
+        val outgoing = graphDefinition.edges.filter { it.fromNodeId == nodeId }
+
+        // Map to (definitionName, parameters) for each target node (if present)
+        val targetInfo = outgoing.mapNotNull { edge ->
+            val targetNode = graphDefinition.nodes.find { it.id == edge.toNodeId }
+            if (targetNode != null && targetNode.definitionName.isNotBlank()) {
+                Pair(targetNode.definitionName, targetNode.parameters)
+            } else null
+        }.distinctBy { it.first }
+
+        // Determine which definitions are actually tool definitions according to the node repository
+        val toolDefinitionNames = nodeRepository.getAllDefinitions()
+            .filter { it.type == NodeType.TOOL }
+            .map { it.name }
+            .toSet()
+
+        // Return only the target entries that correspond to tool definitions
+        return targetInfo.filter { it.first in toolDefinitionNames }
+    }
 }
