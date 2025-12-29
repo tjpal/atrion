@@ -3,13 +3,12 @@ package dev.tjpal.tools.jira
 import com.atlassian.jira.rest.client.api.IssueRestClient
 import com.atlassian.jira.rest.client.api.JiraRestClient
 import com.atlassian.jira.rest.client.api.domain.Issue
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory
 import com.fasterxml.jackson.annotation.JsonClassDescription
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonPropertyDescription
 import dev.tjpal.ai.tools.Tool
 import dev.tjpal.logging.logger
-import dev.tjpal.nodes.jira.JiraCredentials
-import dev.tjpal.secrets.SecretStore
+import dev.tjpal.nodes.jira.JiraRestClientFactory
 import dev.tjpal.tools.jira.dto.JiraComment
 import dev.tjpal.tools.jira.dto.JiraHistoryChangeItem
 import dev.tjpal.tools.jira.dto.JiraHistoryItem
@@ -18,7 +17,6 @@ import dev.tjpal.tools.jira.dto.JiraMainAttributes
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
-import java.net.URI
 
 /**
  * The JiraTool class is both the serializable tool schema examined by the LLM and the runtime Tool implementation.
@@ -41,19 +39,23 @@ class JiraTool(
     @JsonPropertyDescription("Output format. Accepted value: 'json'. (Only JSON is supported.)")
     val outputFormat: String = "json"
 ) : Tool {
+    @JsonIgnore
     @Transient
     var serverUrl: String? = null
 
+    @JsonIgnore
     @Transient
     var secretId: String? = null
 
+    @JsonIgnore
     @Transient
-    var secretStore: SecretStore? = null
-
-    @Transient
-    var json: Json = Json { ignoreUnknownKeys = true }
+    var clientFactory: JiraRestClientFactory? = null
 
     private val logger = logger<JiraTool>()
+
+    @JsonIgnore
+    @Transient
+    private val json = Json { ignoreUnknownKeys = true }
 
     @Serializable
     private data class ErrorDto(val error: String)
@@ -62,9 +64,11 @@ class JiraTool(
         val serverUrl = serverUrl ?: throw IllegalStateException("ServerUrl not configured on tool instance")
         val secretId = secretId ?: throw IllegalStateException("SecretId not configured on tool instance")
 
+        val factory = clientFactory ?: throw IllegalStateException("JiraRestClientFactory not configured on JiraTool instance")
         var client: JiraRestClient? = null
+
         try {
-            client = createJiraClientWithSecret(serverUrl, secretId)
+            client = factory.create(serverUrl, secretId)
 
             val issueClient: IssueRestClient = client.issueClient
             val expand = if (includeHistory) listOf(IssueRestClient.Expandos.CHANGELOG) else emptyList()
@@ -79,10 +83,9 @@ class JiraTool(
                 return serializeError("Requested main attributes but they could not be extracted")
             }
 
-            val dto =
-                JiraIssueDto(main = main ?: JiraMainAttributes(key = issueKey), comments = comments, history = history)
+            val dto = JiraIssueDto(main = main ?: JiraMainAttributes(key = issueKey), comments = comments, history = history)
 
-            return json.encodeToString(dto)
+            return Json { ignoreUnknownKeys = true }.encodeToString(dto)
         } catch (e: Exception) {
             logger.error("JiraTool: error fetching or serializing issue {}: {}", issueKey, e.message)
             return serializeError("Failed to fetch issue: ${e.message}")
@@ -91,60 +94,27 @@ class JiraTool(
         }
     }
 
-    private fun createJiraClientWithSecret(serverUrl: String, secretId: String): JiraRestClient {
-        val store = secretStore ?: throw IllegalStateException("SecretStore not configured")
-
-        val plaintextSecret = try {
-            store.get(secretId)
-        } catch (e: Exception) {
-            logger.error("JiraTool: failed to read secret id={}: {}", secretId, e.message)
-            throw IllegalStateException("Failed to retrieve secret")
-        }
-
-        val credentials = try {
-            json.decodeFromString(JiraCredentials.serializer(), plaintextSecret)
-        } catch (e: Exception) {
-            logger.error("JiraTool: failed to parse credentials for secret id={}: {}", secretId, e.message)
-            throw IllegalStateException("Failed to parse credentials")
-        }
-
-        val username = credentials.username ?: throw IllegalStateException("Credentials missing username")
-        val password = credentials.password ?: throw IllegalStateException("Credentials missing password")
-
-        val uri = try {
-            URI(serverUrl)
-        } catch (e: Exception) {
-            throw IllegalArgumentException("Invalid ServerUrl: ${e.message}")
-        }
-
-        return try {
-            AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(uri, username, password)
-        } catch (e: Exception) {
-            logger.error("Failed to initialize Jira client for serverUrl={}: {}", serverUrl, e.message)
-            throw e
-        }
-    }
-
     private fun serializeError(message: String): String = json.encodeToString(ErrorDto(message))
 
     private fun mapToMainAttributes(issue: Issue): JiraMainAttributes {
         return JiraMainAttributes(
             key = issue.key,
-            summary = issue.summary,
-            issueType = issue.issueType.name,
-            created = issue.creationDate.toString(),
-            updated = issue.updateDate.toString(),
-            projectKey = issue.project.key,
-            reporter = issue.reporter.name,
-            assignee = issue.assignee.name
+            summary = issue?.summary ?: "<no summary available>",
+            description = issue?.description ?: "<no description available>",
+            issueType = issue?.issueType?.name ?: "<no issue type>",
+            created = issue?.creationDate?.toString() ?: "<no creation date>",
+            updated = issue?.updateDate?.toString() ?: "<no update date>",
+            projectKey = issue?.project?.key ?: "<no project key>",
+            reporter = issue?.reporter?.name ?: "<no reporter>",
+            assignee = issue?.assignee?.name ?: "Unassigned"
         )
     }
 
     private fun mapToComments(issue: Issue): List<JiraComment> {
         return issue.comments.map { comment ->
             val author = comment.author?.displayName ?: comment.author?.name ?: "<no name available>"
-            val created = comment.creationDate.toString()
-            val body = comment.body
+            val created = comment?.creationDate?.toString() ?: "<no creation date>"
+            val body = comment?.body ?: "<comment body is empty>"
 
             JiraComment(author = author, created = created, body = body)
         }
@@ -154,14 +124,14 @@ class JiraTool(
         return issue.changelog.map { logEntry ->
             JiraHistoryItem(
                 logEntry.author?.displayName ?: logEntry.author?.name ?: "<no name available>",
-                created = logEntry.created.toString(),
-                items = logEntry.items.map { changeLogItem ->
+                created = logEntry?.created.toString(),
+                items = logEntry?.items?.map { changeLogItem ->
                     JiraHistoryChangeItem(
-                        field = changeLogItem.field,
-                        from = changeLogItem.from,
-                        to = changeLogItem.to
+                        field = changeLogItem?.field ?: "<no field specified>",
+                        from = changeLogItem?.from ?: "<no from value specified>",
+                        to = changeLogItem?.to ?: "<no to value specified>"
                     )
-                }
+                } ?: emptyList()
             )
         }
     }

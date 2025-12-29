@@ -1,7 +1,10 @@
 package dev.tjpal.nodes.jira
 
+import com.atlassian.jira.rest.client.api.JiraRestClient
+import dev.tjpal.graph.ActiveGraph
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.model.NodeParameters
+import dev.tjpal.nodes.NodeActivationContext
 import dev.tjpal.secrets.SecretStore
 import io.mockk.every
 import io.mockk.mockk
@@ -13,12 +16,20 @@ import kotlin.test.Test
 class JiraPollingNodeUnitTest {
     private lateinit var secretStore: SecretStore
     private lateinit var statusRegistry: StatusRegistry
+    private lateinit var jiraRestClientFactory: JiraRestClientFactory
+    private lateinit var jiraClient: JiraRestClient
     private val json = Json { ignoreUnknownKeys = true }
 
     @BeforeTest
     fun setup() {
         secretStore = mockk(relaxed = true)
         statusRegistry = mockk(relaxed = true)
+        jiraRestClientFactory = mockk(relaxed = true)
+        jiraClient = mockk(relaxed = true)
+
+        every {
+            jiraRestClientFactory.create(any<String>(), any<String>())
+        } returns jiraClient
     }
 
     @Test
@@ -33,9 +44,10 @@ class JiraPollingNodeUnitTest {
 
         val graph = mockk<dev.tjpal.graph.ActiveGraph>(relaxed = true)
 
-        val node = JiraPollingNode(params, secretStore, statusRegistry, json)
 
-        val ctx = dev.tjpal.nodes.NodeActivationContext(
+        val node = JiraPollingNode(params, secretStore, statusRegistry, json, jiraRestClientFactory)
+
+        val ctx = NodeActivationContext(
             graphInstanceId = "g-invalid-interval",
             nodeId = "node-invalid-interval",
             parameters = params,
@@ -60,9 +72,9 @@ class JiraPollingNodeUnitTest {
             "JQL" to ""
         ))
 
-        val graph = mockk<dev.tjpal.graph.ActiveGraph>(relaxed = true)
+        val graph = mockk<ActiveGraph>(relaxed = true)
 
-        val node = JiraPollingNode(params, secretStore, statusRegistry, json)
+        val node = JiraPollingNode(params, secretStore, statusRegistry, json, jiraRestClientFactory)
 
         val ctx = dev.tjpal.nodes.NodeActivationContext(
             graphInstanceId = "g-secret-fail",

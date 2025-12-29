@@ -3,7 +3,7 @@ package dev.tjpal.tools.jira
 import dev.tjpal.ai.tools.Tool
 import dev.tjpal.ai.tools.ToolFactory
 import dev.tjpal.logging.logger
-import dev.tjpal.secrets.SecretStore
+import dev.tjpal.nodes.jira.JiraRestClientFactory
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
@@ -11,8 +11,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.reflect.KClass
 
 class JiraToolFactory(
-    private val secretStore: SecretStore,
-    private val json: Json
+    private val json: Json,
+    private val jiraRestClientFactory: JiraRestClientFactory
 ) : ToolFactory {
     private val logger = logger<JiraToolFactory>()
 
@@ -37,8 +37,7 @@ class JiraToolFactory(
 
         toolInstance.serverUrl = serverUrl
         toolInstance.secretId = secretId
-        toolInstance.secretStore = secretStore
-        toolInstance.json = json
+        toolInstance.clientFactory = jiraRestClientFactory
 
         return toolInstance
     }

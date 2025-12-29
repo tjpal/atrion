@@ -4,7 +4,6 @@ import com.atlassian.jira.rest.client.api.IssueRestClient
 import com.atlassian.jira.rest.client.api.JiraRestClient
 import com.atlassian.jira.rest.client.api.domain.Issue
 import com.atlassian.jira.rest.client.api.domain.SearchResult
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.logging.logger
 import dev.tjpal.model.NodeParameters
@@ -22,29 +21,19 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.net.URI
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 
-@Serializable
-data class JiraCredentials(
-    val username: String? = null,
-    val password: String? = null
-)
-
-
 /**
  * JiraPollingNode implements a polling input node that queries Jira periodically and emits newly created issue keys.
- * Atliassian also offers a push mechanism via webhooks. However, for this a server instance with a public IP is needed
- * to receive the response. So for simplicity, this node uses polling.
  */
 class JiraPollingNode(
     private val parameters: NodeParameters,
     private val secretStore: SecretStore,
     private val statusRegistry: StatusRegistry,
-    private val json: Json
+    private val json: Json,
+    private val jiraRestClientFactory: JiraRestClientFactory
 ) : Node {
     private val logger = logger<JiraPollingNode>()
 
@@ -69,9 +58,7 @@ class JiraPollingNode(
             return
         }
 
-        val (username, password) = loadCredentials(context) ?: return
-
-        if (!initializeClient(context, username, password)) {
+        if (!initializeClient(context)) {
             return
         }
 
@@ -111,27 +98,9 @@ class JiraPollingNode(
         return true
     }
 
-    private fun loadCredentials(context: NodeActivationContext): Pair<String, String>? {
-        val plaintextSecret = try {
-            secretStore.get(secretId)
-        } catch (e: Exception) {
-            logger.error("Failed to retrieve secret id={} for node {}: {}", secretId, context.nodeId, e.message)
-            return null
-        }
-
-        val credentials = parseCredentialsFromSecret(plaintextSecret)
-        if (credentials == null) {
-            logger.error("Failed to parse credentials from secret id={} for node {}", secretId, context.nodeId)
-            return null
-        }
-
-        return credentials
-    }
-
-    private fun initializeClient(context: NodeActivationContext, username: String, password: String): Boolean {
+    private fun initializeClient(context: NodeActivationContext): Boolean {
         return try {
-            val uri = URI(serverUrl)
-            jiraClient = AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(uri, username, password)
+            jiraClient = jiraRestClientFactory.create(serverUrl, secretId)
             true
         } catch (e: Exception) {
             logger.error("Failed to initialize Jira client for node {}: {}", context.nodeId, e.message)
@@ -305,23 +274,5 @@ class JiraPollingNode(
         } catch (_: Exception) {
             null
         }
-    }
-
-    private fun parseCredentialsFromSecret(plaintext: String): Pair<String, String>? {
-        try {
-            val credentials = json.decodeFromString<JiraCredentials>(plaintext)
-            val userName = credentials.username
-            val password = credentials.password
-
-            if (userName.isNullOrBlank().not() && credentials.password.isNullOrBlank().not()) {
-                return Pair(userName, password)
-            } else {
-                logger.error("parseCredentialsFromSecret: missing username or password in credentials")
-            }
-        } catch (e: Exception) {
-            logger.error("parseCredentialsFromSecret: JSON decode failed: ${e.message}")
-        }
-
-        return null
     }
 }

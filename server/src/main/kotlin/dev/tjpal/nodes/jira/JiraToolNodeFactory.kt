@@ -12,9 +12,9 @@ import dev.tjpal.model.ParameterType
 import dev.tjpal.nodes.Node
 import dev.tjpal.nodes.NodeActivationContext
 import dev.tjpal.nodes.NodeDeactivationContext
-import dev.tjpal.nodes.NodeFactory
 import dev.tjpal.nodes.NodeInvocationContext
 import dev.tjpal.nodes.NodeOutput
+import dev.tjpal.nodes.NodeFactory
 import dev.tjpal.secrets.SecretStore
 import dev.tjpal.tools.jira.JiraToolFactory
 import dev.tjpal.utilities.ImageResourceEncoder
@@ -25,7 +25,8 @@ class JiraToolNodeFactory @Inject constructor(
     private val toolRegistry: ToolRegistry,
     private val secretStore: SecretStore,
     private val statusRegistry: StatusRegistry,
-    private val json: Json
+    private val json: Json,
+    private val jiraRestClientFactory: JiraRestClientFactory
 ) : NodeFactory {
     private val toolName = "JiraTool"
 
@@ -68,6 +69,6 @@ class JiraToolNodeFactory @Inject constructor(
     }
 
     init {
-        toolRegistry.registerFactory(toolName, JiraToolFactory(secretStore, json))
+        toolRegistry.registerFactory(toolName, JiraToolFactory(json, jiraRestClientFactory))
     }
 }

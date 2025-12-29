@@ -11,12 +11,12 @@ import dev.tjpal.model.ParameterType
 import dev.tjpal.utilities.ImageResourceEncoder
 import javax.inject.Inject
 import kotlinx.serialization.json.Json
-import dev.tjpal.secrets.SecretStore
 
 class JiraPollingNodeFactory @Inject constructor(
-    private val secretStore: SecretStore,
+    private val secretStore: dev.tjpal.secrets.SecretStore,
     private val statusRegistry: StatusRegistry,
-    private val json: Json
+    private val json: Json,
+    private val jiraRestClientFactory: JiraRestClientFactory
 ) : dev.tjpal.nodes.NodeFactory {
     override fun definition(): NodeDefinition {
         val encoder = ImageResourceEncoder()
@@ -61,6 +61,6 @@ class JiraPollingNodeFactory @Inject constructor(
     }
 
     override fun createNode(parameters: NodeParameters): dev.tjpal.nodes.Node {
-        return JiraPollingNode(parameters, secretStore, statusRegistry, json)
+        return JiraPollingNode(parameters, secretStore, statusRegistry, json, jiraRestClientFactory)
     }
 }

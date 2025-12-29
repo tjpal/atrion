@@ -9,10 +9,11 @@ import dev.tjpal.filesystem.FileSystemModule
 import dev.tjpal.graph.StorageModule
 import dev.tjpal.nodes.NodeModule
 import dev.tjpal.secrets.SecretsModule
+import dev.tjpal.nodes.jira.JiraClientModule
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [ConfigModule::class, NodeModule::class, AIModule::class, StorageModule::class, FileSystemModule::class, ToolsModule::class, SecretsModule::class])
+@Component(modules = [ConfigModule::class, NodeModule::class, AIModule::class, StorageModule::class, FileSystemModule::class, ToolsModule::class, SecretsModule::class, JiraClientModule::class])
 interface AppComponent {
     fun app(): App
 }
