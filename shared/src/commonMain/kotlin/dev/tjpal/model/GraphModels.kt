@@ -11,7 +11,11 @@ data class GraphDefinition(
 )
 
 @Serializable
-data class NodeParameters(val values: Map<String, String> = emptyMap())
+data class NodeParameters(val values: Map<String, String> = emptyMap()) {
+    fun vl() {
+        TODO("Not yet implemented")
+    }
+}
 
 @Serializable
 data class NodeInstance(

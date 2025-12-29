@@ -66,7 +66,8 @@ class FileSystemGraphDefinitionRepositoryTest {
             openAICredentialPath = "",
             statusRetentionEntries = 10,
             secretsDirectory = baseDirectory.resolve("secrets").toString(),
-            secretsMasterKeyPath = baseDirectory.resolve("master.key").toString()
+            secretsMasterKeyPath = baseDirectory.resolve("master.key").toString(),
+            nodeMemoryDirectory = baseDirectory.resolve("node-memory").toString(),
         )
         repository = FileSystemGraphDefinitionRepository(config, json, fileSystemService)
     }

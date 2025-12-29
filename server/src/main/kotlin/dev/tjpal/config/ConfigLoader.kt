@@ -1,12 +1,10 @@
 package dev.tjpal.config
 
+import dev.tjpal.logging.logger
 import kotlinx.serialization.json.Json
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
 import javax.inject.Inject
 import javax.inject.Named
-import dev.tjpal.logging.logger
 
 class ConfigLoader @Inject constructor(
     @param:Named("configPath") private val configPath: String,
@@ -22,7 +20,8 @@ class ConfigLoader @Inject constructor(
         openAICredentialPath = System.getProperty("user.home") + "/.atrion/cred",
         statusRetentionEntries = 10000,
         secretsDirectory = System.getProperty("user.home") + "/.atrion/secrets",
-        secretsMasterKeyPath = System.getProperty("user.home") + "/.atrion/secrets_master_key"
+        secretsMasterKeyPath = System.getProperty("user.home") + "/.atrion/secrets_master_key",
+        nodeMemoryDirectory = System.getProperty("user.home") + "/.atrion/node-memory",
     )
 
     fun loadOrCreate(): Config {

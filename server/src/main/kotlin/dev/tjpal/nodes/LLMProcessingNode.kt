@@ -51,13 +51,13 @@ class LLMProcessingNode(
 
             // Build toolsMetadata map (tool definition name -> nodeParameters JSON)
             val toolsMetadata: Map<String, JsonElement> = attached.mapNotNull { (defName, nodeParams) ->
-                try {
-                    val elem = json.encodeToJsonElement(nodeParams.values)
-                    Pair(defName, elem)
-                } catch (e: Exception) {
-                    logger.warn("Failed to serialize node parameters for tool {} on node {}: {}", defName, context.nodeId, e.message)
-                    null
-                }
+                val mutableNodeParams = nodeParams.values.toMutableMap()
+
+                mutableNodeParams["graphInstanceId"] = context.graphInstanceId
+                mutableNodeParams["nodeId"] = context.nodeId
+
+                val elem = json.encodeToJsonElement(mutableNodeParams)
+                Pair(defName, elem)
             }.toMap()
 
             val request = Request(

@@ -4,6 +4,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
 import dev.tjpal.nodes.jira.JiraToolNodeFactory
+import dev.tjpal.nodes.memory.MemoryNodeFactory
 
 @Module
 abstract class NodeModule {
@@ -36,4 +37,9 @@ abstract class NodeModule {
     @IntoMap
     @NodeFactoryKey("Jira Tool")
     abstract fun bindJiraToolNodeFactory(factory: JiraToolNodeFactory): NodeFactory
+
+    @Binds
+    @IntoMap
+    @NodeFactoryKey("Memory Node")
+    abstract fun bindMemoryNodeFactory(factory: MemoryNodeFactory): NodeFactory
 }

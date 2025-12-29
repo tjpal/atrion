@@ -11,5 +11,6 @@ data class Config(
     val openAICredentialPath: String,
     val statusRetentionEntries: Int,
     val secretsDirectory: String,
-    val secretsMasterKeyPath: String
+    val secretsMasterKeyPath: String,
+    val nodeMemoryDirectory: String
 )
