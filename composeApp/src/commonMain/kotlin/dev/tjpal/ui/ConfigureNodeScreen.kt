@@ -67,7 +67,9 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
                 .padding(16.dp)) {
 
                 if (parameters.isEmpty()) {
-                    Text(text = "No parameters to configure for this node.")
+                    Box(modifier = Modifier.weight(1f, fill = true)) {
+                        Text(text = "No parameters to configure for this node.")
+                    }
                 } else {
                     val scrollState = rememberScrollState()
 
