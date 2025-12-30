@@ -29,6 +29,7 @@ import dev.tjpal.composition.foundation.basics.functional.Input
 import dev.tjpal.composition.foundation.basics.functional.MultiLineInput
 import dev.tjpal.composition.foundation.basics.text.Text
 import dev.tjpal.composition.foundation.themes.tokens.TextType
+import dev.tjpal.composition.foundation.themes.tokens.Theme
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.ParameterDefinition
 import dev.tjpal.model.ParameterType
@@ -59,7 +60,7 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
             modifier = Modifier
                 .size(width = 1024.dp, height = 768.dp)
                 .align(Alignment.Center)
-                .background(color = Color.White, shape = RoundedCornerShape(12.dp))
+                .background(color = Theme.current.background, shape = RoundedCornerShape(12.dp))
         ) {
             Column(modifier = Modifier
                 .fillMaxWidth()
