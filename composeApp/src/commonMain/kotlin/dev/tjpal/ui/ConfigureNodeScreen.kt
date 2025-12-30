@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -24,10 +26,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tjpal.composition.foundation.basics.functional.Button
 import dev.tjpal.composition.foundation.basics.functional.Input
+import dev.tjpal.composition.foundation.basics.functional.MultiLineInput
 import dev.tjpal.composition.foundation.basics.text.Text
 import dev.tjpal.composition.foundation.themes.tokens.TextType
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.ParameterDefinition
+import dev.tjpal.model.ParameterType
 import dev.tjpal.ui.navigation.LocalNavController
 import dev.tjpal.viewmodel.GraphEditorViewModel
 import dev.tjpal.viewmodel.NodeCustomData
@@ -53,7 +57,7 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
-                .size(width = 600.dp, height = 400.dp)
+                .size(width = 1024.dp, height = 768.dp)
                 .align(Alignment.Center)
                 .background(color = Color.White, shape = RoundedCornerShape(12.dp))
         ) {
@@ -73,11 +77,14 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
                         .verticalScroll(scrollState),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        Text("Available Parameters", type = TextType.PRIMARY)
+                        Spacer(modifier = Modifier.height(16.dp))
+
                         parameters.forEach { param ->
                             ParameterRow(
                                 param = param,
                                 value = paramValues[param.name] ?: "",
-                                onValueChange = { newValue -> paramValues[param.name] = newValue }
+                                onValueChanged = { newValue -> paramValues[param.name] = newValue }
                             )
                         }
                     }
@@ -116,16 +123,25 @@ private fun ControlStrip(
 }
 
 @Composable
-private fun ParameterRow(param: ParameterDefinition, value: String, onValueChange: (String) -> Unit) {
-    val labelWidthWeight = 0.5f
+private fun ParameterRow(param: ParameterDefinition, value: String, onValueChanged: (String) -> Unit) {
+    val labelWidthWeight = 0.33f
+    val longTextNumLines = 10
 
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.weight(labelWidthWeight).padding(end = 8.dp)) {
-            Text(text = param.name, type = TextType.PRIMARY)
+        Box(modifier = Modifier.weight(labelWidthWeight).padding(end = 8.dp).align(Alignment.Top)) {
+            Text(text = param.name, type = TextType.DEFAULT)
         }
 
         Box(modifier = Modifier.weight(1f - labelWidthWeight)) {
-            Input(value = value, onValueChange = onValueChange)
+            when(param.type) {
+                ParameterType.STRING -> Input(value = value, onValueChange = onValueChanged)
+                ParameterType.LONG_TEXT -> MultiLineInput(
+                    numVisibleLines = longTextNumLines,
+                    value = value,
+                    onValueChange = onValueChanged
+                )
+                else -> Input(value = value, onValueChange = onValueChanged)
+            }
         }
     }
 }
