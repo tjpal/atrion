@@ -167,7 +167,7 @@ private fun ParameterRow(param: ParameterDefinition, value: String, isValid: Boo
     val longTextNumLines = 10
 
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.weight(labelWidthWeight).padding(end = 8.dp).align(Alignment.Top)) {
+        Box(modifier = Modifier.weight(labelWidthWeight).padding(end = 8.dp)) {
             Text(text = param.name, type = TextType.DEFAULT)
         }
 
