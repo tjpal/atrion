@@ -166,9 +166,7 @@ class GraphEditorViewModel(
     }
 
     fun setNodeParameters(nodeId: String, parameters: NodeParameters) {
-        viewModelScope.launch {
-            repository.setNodeParameters(nodeId, parameters)
-        }
+        repository.setNodeParameters(nodeId, parameters)
     }
 
     fun refresh() {

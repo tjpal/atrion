@@ -41,6 +41,15 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
     val associatedData = nodeSpec?.associatedData as? NodeCustomData ?: return
     val parameters = associatedData.definition.parameters
 
+    val paramValues = remember {
+        mutableStateMapOf<String, String>().apply {
+            parameters.forEach {
+                val value = associatedData.node.parameters.values.getOrElse(it.name) { it.default ?: "" }
+                put(it.name, value)
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -52,12 +61,6 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
                 .fillMaxWidth()
                 .wrapContentSize(align = Alignment.TopStart)
                 .padding(16.dp)) {
-
-                val paramValues = remember {
-                    mutableStateMapOf<String, String>().apply {
-                        parameters.forEach { put(it.name, it.default ?: "") }
-                    }
-                }
 
                 if (parameters.isEmpty()) {
                     Text(text = "No parameters to configure for this node.")
