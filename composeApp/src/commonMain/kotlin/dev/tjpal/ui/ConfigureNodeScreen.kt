@@ -21,7 +21,6 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tjpal.composition.foundation.basics.functional.Button
@@ -114,13 +113,17 @@ private fun ControlStrip(
         navController.popBackStack()
     }
 
-    Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .padding(top = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End)
+    ) {
         Button(onClick = { navController.popBackStack() }) {
             Text(text = "Close")
         }
 
         Button(onClick = onSave) {
-            Text(text = "Save")
+            Text(text = "Save", type = TextType.PRIMARY)
         }
     }
 }
