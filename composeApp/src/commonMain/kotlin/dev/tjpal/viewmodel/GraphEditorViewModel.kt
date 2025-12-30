@@ -242,12 +242,13 @@ class GraphEditorViewModel(
         }
 
         val connectors = buildConnectorsFromDefinition(nodeDefinition)
+        val (widthMultiplier, heightMultiplier) = getNodeScale(nodeDefinition)
 
         NodeSpec(
             id = node.id,
             initialPosition = Offset(node.position.x.toFloat(), node.position.y.toFloat()),
-            widthMultiplier = 6,
-            heightMultiplier = 6,
+            widthMultiplier = widthMultiplier,
+            heightMultiplier = heightMultiplier,
             connectors = connectors,
             associatedData = NodeCustomData(node, nodeDefinition.definition),
             shape = getNodeShape(nodeDefinition.definition),
@@ -296,6 +297,16 @@ class GraphEditorViewModel(
             NodeType.PROCESSOR -> NodeShape.RECTANGLE
             NodeType.TOOL -> NodeShape.CIRCLE
             NodeType.MONITOR -> NodeShape.CIRCLE
+        }
+    }
+
+    private fun getNodeScale(nodeDefinition: ExtendedNodeDefinition): Pair<Int, Int> {
+        return when(nodeDefinition.definition.type) {
+            NodeType.INPUT -> Pair(5, 5)
+            NodeType.OUTPUT -> Pair(5, 5)
+            NodeType.PROCESSOR -> Pair(8, 5)
+            NodeType.TOOL -> Pair(3, 3)
+            NodeType.MONITOR -> Pair(3, 3)
         }
     }
 }
