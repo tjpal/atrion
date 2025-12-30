@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tjpal.composition.foundation.basics.functional.Button
@@ -52,6 +53,22 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
                 put(it.name, value)
             }
         }
+    }
+
+    // Map that stores whether each parameter is currently valid
+    val validityMap = remember {
+        mutableStateMapOf<String, Boolean>().apply {
+            parameters.forEach { put(it.name, true) }
+        }
+    }
+
+    val checkValidity = {
+        parameters.forEach { param ->
+            val value = paramValues[param.name] ?: ""
+            validityMap[param.name] = validateParameter(param, value)
+        }
+
+        validityMap.values.all { it }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -86,13 +103,26 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
                             ParameterRow(
                                 param = param,
                                 value = paramValues[param.name] ?: "",
-                                onValueChanged = { newValue -> paramValues[param.name] = newValue }
+                                isValid = validityMap[param.name] ?: true,
+                                onValueChanged = { newValue ->
+                                    paramValues[param.name] = newValue
+
+                                    val wasInvalid = validityMap[param.name] == false
+                                    if (wasInvalid) {
+                                        validityMap[param.name] = validateParameter(param, newValue)
+                                    }
+                                }
                             )
                         }
                     }
                 }
 
-                ControlStrip(nodeId = nodeId, viewModel = viewModel, paramValues = paramValues)
+                ControlStrip(
+                    nodeId = nodeId,
+                    viewModel = viewModel,
+                    paramValues = paramValues,
+                    checkValidity = checkValidity
+                )
             }
         }
     }
@@ -102,15 +132,18 @@ fun ConfigureNodeScreen(nodeId: String, viewModel: GraphEditorViewModel = koinVi
 private fun ControlStrip(
     nodeId: String,
     viewModel: GraphEditorViewModel,
-    paramValues: Map<String, String>
+    paramValues: Map<String, String>,
+    checkValidity: () -> Boolean
 ) {
     val navController = LocalNavController.current
 
     val onSave: () -> Unit = {
-        val nodeParams = NodeParameters(values = paramValues.toMap())
-        viewModel.setNodeParameters(nodeId, nodeParams)
+        if (checkValidity()) {
+            val nodeParams = NodeParameters(values = paramValues.toMap())
+            viewModel.setNodeParameters(nodeId, nodeParams)
 
-        navController.popBackStack()
+            navController.popBackStack()
+        }
     }
 
     Row(modifier = Modifier
@@ -129,7 +162,7 @@ private fun ControlStrip(
 }
 
 @Composable
-private fun ParameterRow(param: ParameterDefinition, value: String, onValueChanged: (String) -> Unit) {
+private fun ParameterRow(param: ParameterDefinition, value: String, isValid: Boolean, onValueChanged: (String) -> Unit) {
     val labelWidthWeight = 0.33f
     val longTextNumLines = 10
 
@@ -139,15 +172,32 @@ private fun ParameterRow(param: ParameterDefinition, value: String, onValueChang
         }
 
         Box(modifier = Modifier.weight(1f - labelWidthWeight)) {
+            val errorModifier = if (!isValid) Modifier.background(Color.Red) else Modifier
+
             when(param.type) {
-                ParameterType.STRING -> Input(value = value, onValueChange = onValueChanged)
+                ParameterType.STRING -> Input(value = value, onValueChange = onValueChanged, modifier = errorModifier)
                 ParameterType.LONG_TEXT -> MultiLineInput(
                     numVisibleLines = longTextNumLines,
                     value = value,
-                    onValueChange = onValueChanged
+                    onValueChange = onValueChanged,
+                    modifier = errorModifier
                 )
-                else -> Input(value = value, onValueChange = onValueChanged)
+                else -> Input(value = value, onValueChange = onValueChanged, modifier = errorModifier)
             }
         }
+    }
+}
+
+private fun validateParameter(param: ParameterDefinition, value: String): Boolean {
+    return when (param.type) {
+        ParameterType.BOOLEAN -> {
+            val trimmed = value.trim().lowercase()
+            trimmed == "true" || trimmed == "false"
+        }
+        ParameterType.INT -> value.toIntOrNull() != null
+        ParameterType.FLOAT -> value.toFloatOrNull() != null
+        ParameterType.STRING -> true
+        ParameterType.LONG_TEXT -> true
+        else -> true
     }
 }

@@ -9,8 +9,8 @@ import dev.tjpal.model.NodeType
 import dev.tjpal.model.ParameterDefinition
 import dev.tjpal.model.ParameterType
 import dev.tjpal.utilities.ImageResourceEncoder
-import javax.inject.Inject
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
 
 class JiraPollingNodeFactory @Inject constructor(
     private val secretStore: dev.tjpal.secrets.SecretStore,
@@ -46,7 +46,7 @@ class JiraPollingNodeFactory @Inject constructor(
                 ),
                 ParameterDefinition(
                     name = "PollIntervalMs",
-                    type = ParameterType.STRING,
+                    type = ParameterType.INT,
                     required = true,
                     description = "Polling interval in milliseconds"
                 ),
