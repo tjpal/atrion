@@ -13,6 +13,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import dev.tjpal.GraphEditorMainScreen
 import dev.tjpal.ui.ConfigureNodeScreen
+import dev.tjpal.viewmodel.GraphEditorViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 val LocalNavController = compositionLocalOf<NavHostController> {
     error("No LocalNavController provided")
@@ -21,6 +23,7 @@ val LocalNavController = compositionLocalOf<NavHostController> {
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
+    val viewModel: GraphEditorViewModel = koinViewModel()
 
     CompositionLocalProvider(LocalNavController provides navController) {
         NavHost(
@@ -34,12 +37,12 @@ fun Navigation() {
             }
         ) {
             composable<MainScreenRoute> {
-                GraphEditorMainScreen()
+                GraphEditorMainScreen(viewModel)
             }
 
             dialog<ConfigureNodeDialogRoute> {
                 val nodeId = it.toRoute<ConfigureNodeDialogRoute>().nodeId
-                ConfigureNodeScreen(nodeId)
+                ConfigureNodeScreen(nodeId, viewModel)
             }
         }
     }
