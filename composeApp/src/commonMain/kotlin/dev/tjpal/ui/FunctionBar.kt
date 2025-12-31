@@ -93,7 +93,7 @@ fun GroupBuilder.nodeButtons(nodeDefinitions: LoadState<List<ExtendedNodeDefinit
                         definition.iconImage?.let {
                             Image(
                                 bitmap = it,
-                                contentDescription = definition.definition.name,
+                                contentDescription = definition.definition.id,
                                 modifier = Modifier.size(buttonSize)
                             )
                         }

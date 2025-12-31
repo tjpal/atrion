@@ -19,10 +19,10 @@ import dev.tjpal.model.NodeType
 import dev.tjpal.viewmodel.GraphEditorViewModel
 
 @Composable
-fun NodeLabelContent(nodeInstance: NodeInstance, viewModel: GraphEditorViewModel) {
+fun NodeLabelContent(nodeInstance: NodeInstance, nodeDefinition: ExtendedNodeDefinition, viewModel: GraphEditorViewModel) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Text(nodeInstance.definitionName, type = TextType.PRIMARY)
+            Text(nodeDefinition.definition.displayedName, type = TextType.PRIMARY)
         }
 
         StatusIcon(nodeInstance.id, viewModel)
@@ -35,14 +35,14 @@ fun NodeIconContent(nodeInstance: NodeInstance, nodeDefinition: ExtendedNodeDefi
     val iconSize = 64.dp
 
     if(iconBitmap == null) {
-        NodeLabelContent(nodeInstance, viewModel)
+        NodeLabelContent(nodeInstance, nodeDefinition, viewModel)
         return
     }
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(
             bitmap = iconBitmap,
-            contentDescription = nodeDefinition.definition.name,
+            contentDescription = nodeDefinition.definition.id,
             modifier = Modifier.size(iconSize)
         )
     }
@@ -58,6 +58,7 @@ fun NodeContent(node: NodeInstance, nodeDefinition: ExtendedNodeDefinition, view
         )
         else -> NodeLabelContent(
             nodeInstance = node,
+            nodeDefinition = nodeDefinition,
             viewModel = viewModel
         )
     }

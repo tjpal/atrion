@@ -18,7 +18,8 @@ class RestInputNodeFactory @Inject constructor(
         val imageEncoder = ImageResourceEncoder()
 
         return NodeDefinition(
-            name = "REST Input",
+            id = "RESTEndpointInput",
+            displayedName = "REST Input",
             type = NodeType.INPUT,
             category = "Input",
             description = "Node that registers for REST inputs",

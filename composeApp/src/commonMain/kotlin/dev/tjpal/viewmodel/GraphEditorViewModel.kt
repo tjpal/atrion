@@ -146,7 +146,7 @@ class GraphEditorViewModel(
         viewModelScope.launch {
             val nodeInstance = NodeInstance(
                 id = Uuid.random().toString(),
-                definitionName = nodeDefinition.definition.name,
+                definitionName = nodeDefinition.definition.id,
                 parameters = NodeParameters(),
                 position = Position(x = 0, y = 0)
             )
@@ -190,7 +190,7 @@ class GraphEditorViewModel(
 
             NodeInstance(
                 id = node.id,
-                definitionName = customData.definition.name,
+                definitionName = customData.definition.id,
                 parameters = customData.node.parameters,
                 position = Position(
                     x = currentPosition.x.toInt(),
@@ -233,7 +233,7 @@ class GraphEditorViewModel(
      */
     private fun mapNodes(nodes: List<NodeInstance>): List<NodeSpec> = nodes.mapNotNull { node ->
         val nodeDefinition = when (val nodeDefinitions = repository.nodeDefinitions.value) {
-            is LoadState.Ready -> nodeDefinitions.data.firstOrNull { it.definition.name == node.definitionName }
+            is LoadState.Ready -> nodeDefinitions.data.firstOrNull { it.definition.id == node.definitionName }
             else -> null
         }
 

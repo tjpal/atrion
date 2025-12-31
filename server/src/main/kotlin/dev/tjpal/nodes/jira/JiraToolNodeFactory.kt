@@ -12,9 +12,9 @@ import dev.tjpal.model.ParameterType
 import dev.tjpal.nodes.Node
 import dev.tjpal.nodes.NodeActivationContext
 import dev.tjpal.nodes.NodeDeactivationContext
+import dev.tjpal.nodes.NodeFactory
 import dev.tjpal.nodes.NodeInvocationContext
 import dev.tjpal.nodes.NodeOutput
-import dev.tjpal.nodes.NodeFactory
 import dev.tjpal.secrets.SecretStore
 import dev.tjpal.tools.jira.JiraToolFactory
 import dev.tjpal.utilities.ImageResourceEncoder
@@ -34,7 +34,8 @@ class JiraToolNodeFactory @Inject constructor(
         val resourceEncoder = ImageResourceEncoder()
 
         return NodeDefinition(
-            name = "JiraTool",
+            id = "JiraTool",
+            displayedName = "Jira",
             type = NodeType.TOOL,
             category = "Tool",
             description = "Tool that fetches a single Jira issue and returns compacted output (main attributes, comments, history)",

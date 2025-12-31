@@ -87,7 +87,7 @@ class ActiveGraph(
 
             try {
                 // Determine node type by resolving the node definition via repository
-                val definition = allDefinitions.find { it.name == nodeDef.definitionName }
+                val definition = allDefinitions.find { it.id == nodeDef.definitionName }
                 val isInput = definition?.type == NodeType.INPUT
 
                 if (isInput) {
@@ -303,7 +303,7 @@ class ActiveGraph(
             graphDefinition.nodes.find { it.id == edge.toNodeId }?.definitionName
         }.distinct()
 
-        val toolDefinitionNames = nodeRepository.getAllDefinitions().filter { it.type == NodeType.TOOL }.map { it.name }.toSet()
+        val toolDefinitionNames = nodeRepository.getAllDefinitions().filter { it.type == NodeType.TOOL }.map { it.id }.toSet()
 
         return targetNodeDefinitionNames.filter { it in toolDefinitionNames }
     }
@@ -328,7 +328,7 @@ class ActiveGraph(
         // Determine which definitions are actually tool definitions according to the node repository
         val toolDefinitionNames = nodeRepository.getAllDefinitions()
             .filter { it.type == NodeType.TOOL }
-            .map { it.name }
+            .map { it.id }
             .toSet()
 
         // Return only the target entries that correspond to tool definitions

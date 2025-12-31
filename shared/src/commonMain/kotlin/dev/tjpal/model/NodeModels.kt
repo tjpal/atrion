@@ -34,7 +34,8 @@ data class ParameterDefinition(
 
 @Serializable
 data class NodeDefinition(
-    val name: String,
+    val id: String,
+    val displayedName: String,
     val type: NodeType,
     val category: String,
     val description: String,

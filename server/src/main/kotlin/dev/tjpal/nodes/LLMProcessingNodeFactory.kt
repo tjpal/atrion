@@ -11,8 +11,8 @@ import dev.tjpal.model.NodeType
 import dev.tjpal.model.ParameterDefinition
 import dev.tjpal.model.ParameterType
 import dev.tjpal.utilities.ImageResourceEncoder
-import javax.inject.Inject
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
 
 class LLMProcessingNodeFactory @Inject constructor(
     private val llm: LLM,
@@ -24,7 +24,8 @@ class LLMProcessingNodeFactory @Inject constructor(
         val resourceEncoder = ImageResourceEncoder()
 
         return NodeDefinition(
-            name = "LLM Processor",
+            id = "LLMProcessor",
+            displayedName = "LLM",
             type = NodeType.PROCESSOR,
             category = "Processing",
             description = "Passes input text to a Language Model and returns the response.",

@@ -26,7 +26,8 @@ class MemoryNodeFactory @Inject constructor(
         val encoder = ImageResourceEncoder()
 
         return NodeDefinition(
-            name = "MemoryTool",
+            id = "MemoryTool",
+            displayedName = "Memory",
             type = NodeType.TOOL,
             category = "Tool",
             description = "Tool for persisting small text records per graph/node and retrieving them (JSONL format).",

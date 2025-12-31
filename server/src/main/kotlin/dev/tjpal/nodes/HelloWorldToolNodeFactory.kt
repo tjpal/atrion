@@ -20,7 +20,8 @@ class HelloWorldToolNodeFactory @Inject constructor(
         val resourceEncoder = ImageResourceEncoder()
 
         return NodeDefinition(
-            name = toolName,
+            id = toolName,
+            displayedName = "Hello World",
             type = NodeType.TOOL,
             category = "Tool",
             description = "For test purpose",

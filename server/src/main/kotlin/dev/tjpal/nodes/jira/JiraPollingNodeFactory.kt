@@ -22,7 +22,8 @@ class JiraPollingNodeFactory @Inject constructor(
         val encoder = ImageResourceEncoder()
 
         return NodeDefinition(
-            name = "Jira Polling Input",
+            id = "JiraPollingInput",
+            displayedName = " Jira - Polling",
             type = NodeType.INPUT,
             category = "Input",
             description = "Polls a Jira server periodically and emits new issue keys as they are created.",
