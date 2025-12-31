@@ -25,6 +25,8 @@ import dev.tjpal.model.NodeType
 import dev.tjpal.viewmodel.GraphEditorViewModel
 
 private val iconSize = 48.dp
+private val toolLabelOffset = 25.dp
+private val nodeColumSpacing = 16.dp
 
 @Composable
 fun NodeLabelContent(nodeInstance: NodeInstance, nodeDefinition: ExtendedNodeDefinition, viewModel: GraphEditorViewModel) {
@@ -41,7 +43,7 @@ fun NodeLabelContent(nodeInstance: NodeInstance, nodeDefinition: ExtendedNodeDef
 
         Column(
             modifier = Modifier.width(width).offset(offset, 0.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(nodeColumSpacing)
         ) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(nodeDefinition.definition.displayedName, type = TextType.PRIMARY)
@@ -80,6 +82,12 @@ fun NodeIconContent(nodeInstance: NodeInstance, nodeDefinition: ExtendedNodeDefi
             contentDescription = nodeDefinition.definition.id,
             modifier = Modifier.size(iconSize)
         )
+    }
+
+    Box(modifier = Modifier.offset(0.dp, iconSize + toolLabelOffset).fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(nodeDefinition.definition.displayedName, type = TextType.PRIMARY)
     }
 }
 
