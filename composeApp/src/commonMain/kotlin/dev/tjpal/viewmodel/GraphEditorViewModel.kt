@@ -253,7 +253,7 @@ class GraphEditorViewModel(
             associatedData = NodeCustomData(node, nodeDefinition.definition),
             shape = getNodeShape(nodeDefinition.definition),
             content = { _ ->
-                NodeContent(node = node, viewModel = this)
+                NodeContent(node = node, nodeDefinition = nodeDefinition, viewModel = this)
             },
         )
     }
@@ -273,19 +273,40 @@ class GraphEditorViewModel(
     private fun buildConnectorsFromDefinition(nodeDefinition: ExtendedNodeDefinition): List<Connector> {
         val list = mutableListOf<Connector>()
 
-        fun build(listOfDefinitions: List<ConnectorDefinition>, side: EdgeSide) {
+        fun build(
+            listOfDefinitions: List<ConnectorDefinition>,
+            side: EdgeSide,
+            connectorIndexSelector: (index: Int, numConnectors: Int) -> Int
+        ) {
             for ((index, def) in listOfDefinitions.withIndex()) {
-                list.add(Connector(id = def.id, side = side, index = index))
+                list.add(Connector(id = def.id, side = side, index = connectorIndexSelector(index, listOfDefinitions.size)))
             }
         }
 
         val toolConnectorSide = if(nodeDefinition.definition.type == NodeType.TOOL) EdgeSide.TOP else EdgeSide.BOTTOM
         val monitorConnectorSide = if(nodeDefinition.definition.type == NodeType.MONITOR) EdgeSide.BOTTOM else EdgeSide.TOP
 
-        build(nodeDefinition.definition.inputConnectors, EdgeSide.LEFT)
-        build(nodeDefinition.definition.outputConnectors, EdgeSide.RIGHT)
-        build(nodeDefinition.definition.toolConnectors, toolConnectorSide)
-        build(nodeDefinition.definition.debugConnectors, monitorConnectorSide)
+        val inputOutputConnectorIndexSelector = { index: Int, numConnectors: Int ->
+            when(numConnectors) {
+                1 -> 2
+                2 -> index * 2 + 1
+                3 -> index * 2
+                else -> index
+            }
+        }
+
+        val toolMonitorConnectorIndexSelector = { index: Int, numConnectors: Int ->
+            when(nodeDefinition.definition.type) {
+                NodeType.TOOL -> index + 1
+                NodeType.PROCESSOR -> index + 3
+                else -> index
+            }
+        }
+
+        build(nodeDefinition.definition.inputConnectors, EdgeSide.LEFT, inputOutputConnectorIndexSelector)
+        build(nodeDefinition.definition.outputConnectors, EdgeSide.RIGHT, inputOutputConnectorIndexSelector)
+        build(nodeDefinition.definition.toolConnectors, toolConnectorSide, toolMonitorConnectorIndexSelector)
+        build(nodeDefinition.definition.debugConnectors, monitorConnectorSide, toolMonitorConnectorIndexSelector)
 
         return list
     }
@@ -304,7 +325,7 @@ class GraphEditorViewModel(
         return when(nodeDefinition.definition.type) {
             NodeType.INPUT -> Pair(5, 5)
             NodeType.OUTPUT -> Pair(5, 5)
-            NodeType.PROCESSOR -> Pair(8, 5)
+            NodeType.PROCESSOR -> Pair(7, 5)
             NodeType.TOOL -> Pair(3, 3)
             NodeType.MONITOR -> Pair(3, 3)
         }
