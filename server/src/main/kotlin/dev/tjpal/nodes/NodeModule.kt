@@ -25,11 +25,6 @@ abstract class NodeModule {
 
     @Binds
     @IntoMap
-    @NodeFactoryKey("HelloWorld Tool")
-    abstract fun bindHelloWorldToolNodeFactory(factory: HelloWorldToolNodeFactory): NodeFactory
-
-    @Binds
-    @IntoMap
     @NodeFactoryKey("Jira Polling Input")
     abstract fun bindJiraPollingNodeFactory(factory: dev.tjpal.nodes.jira.JiraPollingNodeFactory): NodeFactory
 
