@@ -21,7 +21,14 @@ import dev.tjpal.viewmodel.GraphEditorViewModel
 @Composable
 fun NodeLabelContent(nodeInstance: NodeInstance, nodeDefinition: ExtendedNodeDefinition, viewModel: GraphEditorViewModel) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        val alignment = when(nodeDefinition.definition.type) {
+            NodeType.PROCESSOR -> Alignment.Center
+            NodeType.INPUT -> Alignment.CenterEnd
+            NodeType.OUTPUT -> Alignment.CenterStart
+            else -> Alignment.Center
+        }
+
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = alignment) {
             Text(nodeDefinition.definition.displayedName, type = TextType.PRIMARY)
         }
 
