@@ -23,7 +23,7 @@ class OutputSinkNodeFactory @Inject constructor(
             type = NodeType.OUTPUT,
             category = "Output",
             description = "Stores textual outputs in-memory for synchronous retrieval",
-            icon = imageResourceEncoder.encodeResourceToBase64("placeholder-3.png"),
+            icon = imageResourceEncoder.encodeResourceToBase64("rest-output.png"),
             inputConnectors = listOf(ConnectorDefinition(id = "in", label = "In", schema = ConnectorSchema.TEXT)),
             outputConnectors = emptyList(),
             toolConnectors = emptyList(),

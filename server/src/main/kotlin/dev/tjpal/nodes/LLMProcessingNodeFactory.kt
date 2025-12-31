@@ -29,7 +29,7 @@ class LLMProcessingNodeFactory @Inject constructor(
             type = NodeType.PROCESSOR,
             category = "Processing",
             description = "Passes input text to a Language Model and returns the response.",
-            icon = resourceEncoder.encodeResourceToBase64("placeholder-2.png"),
+            icon = resourceEncoder.encodeResourceToBase64("llm.png"),
             inputConnectors = listOf(ConnectorDefinition(id = "in", label = "In", schema = ConnectorSchema.TEXT)),
             outputConnectors = listOf(ConnectorDefinition(id = "text_out", label = "Out", schema = ConnectorSchema.TEXT)),
             toolConnectors = listOf(ConnectorDefinition(id = "tool", label = "Tool", schema = ConnectorSchema.JSON)),

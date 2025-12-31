@@ -27,6 +27,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 private val buttonSize = 64.dp
+private val iconSize = 32.dp
 
 fun GroupBuilder.operationButtons(viewModel: GraphEditorViewModel) {
     item {
@@ -36,13 +37,13 @@ fun GroupBuilder.operationButtons(viewModel: GraphEditorViewModel) {
             viewModel.save()
         }
 
-        IconButton(type = ButtonType.SHY, onClick = saveAction) {
+        IconButton(modifier = Modifier.size(buttonSize), type = ButtonType.SHY, onClick = saveAction) {
             val isModified by viewModel.isModified.collectAsStateWithLifecycle()
 
             Image(
                 painter = painterResource(if(isModified) Res.drawable.store else Res.drawable.store_inactive),
                 contentDescription = "Store",
-                modifier = Modifier.size(buttonSize)
+                modifier = Modifier.size(iconSize)
             )
         }
     }
@@ -67,7 +68,7 @@ fun GroupBuilder.modeButtons(viewModel: GraphEditorViewModel) {
                 Image(
                     painter = painterResource(it.icon),
                     contentDescription = it.content,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(iconSize)
                 )
             }
         }
@@ -94,7 +95,7 @@ fun GroupBuilder.nodeButtons(nodeDefinitions: LoadState<List<ExtendedNodeDefinit
                             Image(
                                 bitmap = it,
                                 contentDescription = definition.definition.id,
-                                modifier = Modifier.size(buttonSize)
+                                modifier = Modifier.size(iconSize)
                             )
                         }
                     }

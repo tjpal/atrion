@@ -27,7 +27,7 @@ class JiraPollingNodeFactory @Inject constructor(
             type = NodeType.INPUT,
             category = "Input",
             description = "Polls a Jira server periodically and emits new issue keys as they are created.",
-            icon = encoder.encodeResourceToBase64("placeholder-1.png"),
+            icon = encoder.encodeResourceToBase64("jira-polling.png"),
             inputConnectors = emptyList(),
             outputConnectors = listOf(ConnectorDefinition(id = "out", label = "Out", schema = ConnectorSchema.TEXT)),
             toolConnectors = emptyList(),

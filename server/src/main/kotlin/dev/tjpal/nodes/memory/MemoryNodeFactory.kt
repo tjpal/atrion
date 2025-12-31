@@ -31,7 +31,7 @@ class MemoryNodeFactory @Inject constructor(
             type = NodeType.TOOL,
             category = "Tool",
             description = "Tool for persisting small text records per graph/node and retrieving them (JSONL format).",
-            icon = encoder.encodeResourceToBase64("placeholder-1.png"),
+            icon = encoder.encodeResourceToBase64("memory-tool.png"),
             inputConnectors = emptyList(),
             outputConnectors = emptyList(),
             toolConnectors = listOf(ConnectorDefinition(id = "tool", label = "Tool", schema = ConnectorSchema.JSON)),

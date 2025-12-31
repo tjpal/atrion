@@ -23,7 +23,7 @@ class RestInputNodeFactory @Inject constructor(
             type = NodeType.INPUT,
             category = "Input",
             description = "Node that registers for REST inputs",
-            icon = imageEncoder.encodeResourceToBase64("placeholder-1.png"),
+            icon = imageEncoder.encodeResourceToBase64("rest-input.png"),
             inputConnectors = emptyList(),
             outputConnectors = listOf(ConnectorDefinition(id = "out", label = "Out", schema = ConnectorSchema.TEXT)),
             toolConnectors = emptyList(),

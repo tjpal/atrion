@@ -39,7 +39,7 @@ class JiraToolNodeFactory @Inject constructor(
             type = NodeType.TOOL,
             category = "Tool",
             description = "Tool that fetches a single Jira issue and returns compacted output (main attributes, comments, history)",
-            icon = resourceEncoder.encodeResourceToBase64("placeholder-1.png"),
+            icon = resourceEncoder.encodeResourceToBase64("jira-tool.png"),
             inputConnectors = emptyList(),
             outputConnectors = emptyList(),
             toolConnectors = listOf(ConnectorDefinition(id = "tool", label = "Tool", schema = ConnectorSchema.JSON)),

@@ -24,7 +24,10 @@ import dev.tjpal.model.Position
 import dev.tjpal.model.StatusEntry
 import dev.tjpal.ui.NodeContent
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -60,6 +63,9 @@ class GraphEditorViewModel(
 
     val nodeDefinitions = repository.nodeDefinitions
     val isModified = repository.loadedGraphWasModified
+    val isGraphActive = activeGraphService.activeGraph
+        .map { it != null }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, initialValue = false)
 
     init {
         viewModelScope.launch {
