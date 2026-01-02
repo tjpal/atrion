@@ -14,6 +14,7 @@ import dev.tjpal.nodes.NodeActivationContext
 import dev.tjpal.nodes.NodeDeactivationContext
 import dev.tjpal.nodes.NodeInvocationContext
 import dev.tjpal.nodes.NodeOutput
+import dev.tjpal.nodes.payload.RawPayload
 import dev.tjpal.secrets.SecretStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -171,7 +172,7 @@ class JiraPollingNode(
         }
 
         if (newIssueKeys.isNotEmpty()) {
-            logger.info("JiraPollingNode discovered {} new issues for node {}", newIssueKeys.size, context.nodeId)
+            logger.info("JiraPollingNode discovered ${newIssueKeys.size} new issues for node {}", context.nodeId)
             emitIssuesForKeys(newIssueKeys, context)
         } else {
             sendStatus(NodeStatus.RUNNING, null, null, "Poll completed, no new issues", context)
@@ -182,12 +183,12 @@ class JiraPollingNode(
         for (key in keys) {
             try {
                 val output = object : NodeOutput {
-                    override fun send(outputConnectorId: String, payload: String) {
+                    override fun send(outputConnectorId: String, payload: dev.tjpal.nodes.payload.NodePayload) {
                         context.graph.routeFromNode(context.nodeId, outputConnectorId, payload, java.util.UUID.randomUUID().toString())
                     }
                 }
 
-                output.send("out", key)
+                output.send("out", RawPayload(key))
                 seenIssueKeys.add(key)
 
                 sendStatus(NodeStatus.RUNNING, null, null, "Emitted new issue: $key", context)

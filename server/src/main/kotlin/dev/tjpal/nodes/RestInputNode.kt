@@ -5,6 +5,7 @@ import dev.tjpal.api.route.RouteRegistrarHolder
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.logging.logger
 import dev.tjpal.model.NodeParameters
+import dev.tjpal.nodes.payload.RawPayload
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receiveText
@@ -56,12 +57,12 @@ class RestInputNode(
                 graphInstanceId = context.graphInstanceId,
                 executionId = executionId,
                 nodeId = context.nodeId,
-                payload = body,
+                payload = RawPayload(body),
                 graph = context.graph
             )
 
             val output = object : NodeOutput {
-                override fun send(outputConnectorId: String, payload: String) {
+                override fun send(outputConnectorId: String, payload: dev.tjpal.nodes.payload.NodePayload) {
                     context.graph.routeFromNode(context.nodeId, outputConnectorId, payload, executionId)
                 }
             }
@@ -82,11 +83,11 @@ class RestInputNode(
 
     override suspend fun onEvent(context: NodeInvocationContext, output: NodeOutput) {
         output.send("out", context.payload)
-        sendStatusEntry(context.payload, context)
+        sendStatusEntry(context.payload.asString(), context)
 
         logger.debug(
             "RestInputNode forwarded payload for graphInstanceId={} nodeId={} executionId={} payload={}",
-            context.graphInstanceId, context.nodeId, context.executionId, context.payload
+            context.graphInstanceId, context.nodeId, context.executionId, context.payload.asString()
         )
     }
 

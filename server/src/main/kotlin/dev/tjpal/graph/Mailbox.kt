@@ -1,11 +1,12 @@
 package dev.tjpal.graph
 
+import dev.tjpal.nodes.payload.NodePayload
 import kotlinx.coroutines.channels.Channel
 import java.util.concurrent.atomic.AtomicInteger
 
 data class MailboxMessage(
     val toConnectorId: String,
-    val payload: String,
+    val payload: NodePayload,
     val executionId: String
 )
 

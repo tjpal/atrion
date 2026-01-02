@@ -3,6 +3,7 @@ package dev.tjpal.nodes
 import dev.tjpal.graph.ActiveGraph
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeParameters
+import dev.tjpal.nodes.payload.NodePayload
 
 interface NodeFactory {
     // Provides the static definition that describes the node
@@ -37,7 +38,7 @@ data class NodeInvocationContext(
     val graphInstanceId: String,
     val executionId: String,
     val nodeId: String,
-    val payload: String,
+    val payload: NodePayload,
     val graph: ActiveGraph
 )
 
@@ -49,5 +50,5 @@ data class NodeDeactivationContext(
 // Node output interface used by nodes to send outputs back to the graph. Will be implemented by the ActiveGraph
 // to provide a way back for data.
 interface NodeOutput {
-    fun send(outputConnectorId: String, payload: String)
+    fun send(outputConnectorId: String, payload: NodePayload)
 }

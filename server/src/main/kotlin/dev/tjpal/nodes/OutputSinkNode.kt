@@ -25,11 +25,11 @@ class OutputSinkNode @Inject constructor(
         executionOutputStore.appendOutput(
             executionId = context.executionId,
             nodeId = context.nodeId,
-            payload = context.payload
+            payload = context.payload.asString()
         )
 
-        sendStatusEntry(context.payload, context)
-        logger.debug("OutputSinkNode appended output for executionId={} nodeId={} payload={}", context.executionId, context.nodeId, context.payload)
+        sendStatusEntry(context.payload.asString(), context)
+        logger.debug("OutputSinkNode appended output for executionId={} nodeId={} payload={}", context.executionId, context.nodeId, context.payload.asString())
     }
 
     private fun sendStatusEntry(payload: String, context: NodeInvocationContext) {

@@ -3,6 +3,7 @@ package dev.tjpal.nodes
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
+import dev.tjpal.nodes.jira.JiraPollingNodeFactory
 import dev.tjpal.nodes.jira.JiraToolNodeFactory
 import dev.tjpal.nodes.memory.MemoryNodeFactory
 
@@ -10,31 +11,31 @@ import dev.tjpal.nodes.memory.MemoryNodeFactory
 abstract class NodeModule {
     @Binds
     @IntoMap
-    @NodeFactoryKey("REST Input")
+    @NodeFactoryKey("RESTEndpointInput")
     abstract fun bindRestInputNodeFactory(factory: RestInputNodeFactory): NodeFactory
 
     @Binds
     @IntoMap
-    @NodeFactoryKey("LLM Processor")
+    @NodeFactoryKey("LLMProcessor")
     abstract fun bindLLMProcessingNodeFactory(factory: LLMProcessingNodeFactory): NodeFactory
 
     @Binds
     @IntoMap
-    @NodeFactoryKey("Sink Output")
+    @NodeFactoryKey("RESTSinkOutput")
     abstract fun bindOutputSinkNodeFactory(factory: OutputSinkNodeFactory): NodeFactory
 
     @Binds
     @IntoMap
-    @NodeFactoryKey("Jira Polling Input")
-    abstract fun bindJiraPollingNodeFactory(factory: dev.tjpal.nodes.jira.JiraPollingNodeFactory): NodeFactory
+    @NodeFactoryKey("JiraPollingInput")
+    abstract fun bindJiraPollingNodeFactory(factory: JiraPollingNodeFactory): NodeFactory
 
     @Binds
     @IntoMap
-    @NodeFactoryKey("Jira Tool")
+    @NodeFactoryKey("JiraTool")
     abstract fun bindJiraToolNodeFactory(factory: JiraToolNodeFactory): NodeFactory
 
     @Binds
     @IntoMap
-    @NodeFactoryKey("Memory Node")
+    @NodeFactoryKey("MemoryTool")
     abstract fun bindMemoryNodeFactory(factory: MemoryNodeFactory): NodeFactory
 }

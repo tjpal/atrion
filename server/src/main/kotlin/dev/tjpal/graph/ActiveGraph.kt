@@ -11,6 +11,7 @@ import dev.tjpal.nodes.NodeDeactivationContext
 import dev.tjpal.nodes.NodeInvocationContext
 import dev.tjpal.nodes.NodeOutput
 import dev.tjpal.nodes.NodeRepository
+import dev.tjpal.nodes.payload.NodePayload
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -154,7 +155,7 @@ class ActiveGraph(
      * Is invoked by external registries for input events. Input nodes do not wait for their input. Instead they
      * rely on the graph to create an instance once an input event is received.
      */
-    fun onInputEvent(nodeId: String, payload: String, executionId: String) {
+    fun onInputEvent(nodeId: String, payload: NodePayload, executionId: String) {
         if (stopped.get()) {
             logger.warn("Received input for stopped graph execution {} nodeId={}", id, nodeId)
             return
@@ -231,7 +232,7 @@ class ActiveGraph(
                 // NodeOutput implementation will call back into this ActiveGraph to route outputs. It must
                 // capture the per-input executionId so that downstream mailboxes receive messages associated to it.
                 val output = object : NodeOutput {
-                    override fun send(outputConnectorId: String, payload: String) {
+                    override fun send(outputConnectorId: String, payload: NodePayload) {
                         routeOutput(nodeId, outputConnectorId, payload, message.executionId)
                     }
                 }
@@ -246,7 +247,7 @@ class ActiveGraph(
                 )
 
                 try {
-                    logger.debug("Delivering message to node {} executionId={} payload={}", nodeId, message.executionId, message.payload)
+                    logger.debug("Delivering message to node {} executionId={} payload={}", nodeId, message.executionId, message.payload.asString())
                     nodeInstance.onEvent(nodeInvocationContext, output)
                 } catch (e: Exception) {
                     logger.error("Node {} processing failed for execution {}", nodeId, e.message)
@@ -272,7 +273,7 @@ class ActiveGraph(
         }
     }
 
-    private fun routeOutput(fromNodeId: String, fromConnectorId: String, payload: String, executionId: String) {
+    private fun routeOutput(fromNodeId: String, fromConnectorId: String, payload: NodePayload, executionId: String) {
         val key = Pair(fromNodeId, fromConnectorId)
         val targets = adjacency[key] ?: emptyList()
 
@@ -292,7 +293,7 @@ class ActiveGraph(
         }
     }
 
-    fun routeFromNode(fromNodeId: String, fromConnectorId: String, payload: String, executionId: String) {
+    fun routeFromNode(fromNodeId: String, fromConnectorId: String, payload: NodePayload, executionId: String) {
         routeOutput(fromNodeId, fromConnectorId, payload, executionId)
     }
 
