@@ -12,6 +12,7 @@ import dev.tjpal.nodes.NodeInvocationContext
 import dev.tjpal.nodes.NodeOutput
 import dev.tjpal.nodes.NodeRepository
 import dev.tjpal.nodes.payload.NodePayload
+import dev.tjpal.nodes.payload.PayloadTypeToClass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -20,6 +21,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.reflect.KClass
 
 class ActiveGraph(
     val id: String,
@@ -369,6 +371,34 @@ class ActiveGraph(
 
         // Return only the target entries that correspond to tool definitions
         return targetInfo.filter { it.first in toolDefinitionNames }
+    }
+
+    fun getPreferredOutputType(nodeId: String, outputConnectorId: String): KClass<out NodePayload>? {
+        val targetEdge = graphDefinition.edges.find { it.fromNodeId == nodeId && it.fromConnectorId == outputConnectorId }
+            ?: run {
+                logger.error("No outgoing edge found for node {} connector {}", nodeId, outputConnectorId)
+                return null
+            }
+
+        val targetNode = graphDefinition.nodes.find { it.id == targetEdge.toNodeId }
+            ?: run {
+                logger.error("No target node found for edge from node {} connector {}", nodeId, outputConnectorId)
+                return null
+            }
+
+        val targetNodeDefinition = nodeRepository.getAllDefinitions().find { it.id == targetNode.definitionName }
+            ?: run {
+                logger.error("No node definition found for target node {} of edge from node {} connector {}", targetNode.id, nodeId, outputConnectorId)
+                return null
+            }
+
+        val targetInputConnector = targetNodeDefinition.inputConnectors.find { it.id == targetEdge.toConnectorId }
+            ?: run {
+                logger.error("No input connector {} found in target node definition {} for edge from node {} connector {}", targetEdge.toConnectorId, targetNodeDefinition.id, nodeId, outputConnectorId)
+                return null
+            }
+
+        return PayloadTypeToClass.toClass(targetInputConnector.preferredInputType)
     }
 
     private fun enqueueDirect(

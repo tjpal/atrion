@@ -12,7 +12,7 @@ enum class ConnectorSchema { TEXT, AUDIO, JSON }
 data class ConnectorDefinition(
     val id: String,
     val label: String,
-    val schema: ConnectorSchema,
+    val preferredInputType: String = "",
     val minConnections: Int = 0,
     val maxConnections: Int = Int.MAX_VALUE,
     val optional: Boolean = false
