@@ -13,6 +13,10 @@ sealed interface NodePayload {
 
 }
 
+/**
+ * Fundamental payload type. If a node does not specify an input payload or accepted payloads,
+ * this type will be used. Must be supported by all nodes.
+ */
 @Serializable
 data class RawPayload(val text: String) : NodePayload {
     override fun asString(): String = text
