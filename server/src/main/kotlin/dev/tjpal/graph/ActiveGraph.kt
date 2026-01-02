@@ -162,7 +162,13 @@ class ActiveGraph(
         }
 
         val mailbox = mailboxes.computeIfAbsent(nodeId) { Mailbox() }
-        val message = MailboxMessage("", payload, executionId) // Input connectorId is ignored by input nodes
+        val message = MailboxMessage(
+            toConnectorId = "",
+            payload = payload,
+            executionId = executionId,
+            fromNodeId = null,
+            fromConnectorId = null
+        ) // Input connectorId is ignored by input nodes
 
         val messageEnqueued = mailbox.enqueue(message)
 
@@ -235,6 +241,27 @@ class ActiveGraph(
                     override fun send(outputConnectorId: String, payload: NodePayload) {
                         routeOutput(nodeId, outputConnectorId, payload, message.executionId)
                     }
+
+                    override fun reply(payload: NodePayload) {
+                        val originNodeId = message.fromNodeId ?: run {
+                            logger.warn("Reply attempted but origin unknown for node {} execution {}", nodeId, message.executionId)
+                            return
+                        }
+
+                        val toConnector = message.fromConnectorId ?: run {
+                            logger.warn("Reply attempted but origin connector unknown for node {} execution {}", nodeId, message.executionId)
+                            return
+                        }
+
+                        enqueueDirect(
+                            targetNodeId = originNodeId,
+                            toConnectorId = toConnector,
+                            payload = payload,
+                            executionId = message.executionId,
+                            fromNodeId = nodeId,
+                            fromConnectorId = ""
+                        )
+                    }
                 }
 
                 // Deliver the payload to the node instance
@@ -243,7 +270,9 @@ class ActiveGraph(
                     executionId = message.executionId,
                     nodeId = nodeId,
                     payload = message.payload,
-                    graph = this
+                    graph = this,
+                    fromNodeId = message.fromNodeId,
+                    fromConnectorId = message.fromConnectorId
                 )
 
                 try {
@@ -281,7 +310,13 @@ class ActiveGraph(
 
         targets.forEach { target ->
             val mailbox = mailboxes.computeIfAbsent(target.toNodeId) { Mailbox() }
-            val message = MailboxMessage(target.toConnectorId, payload, executionId)
+            val message = MailboxMessage(
+                toConnectorId = target.toConnectorId,
+                payload = payload,
+                executionId = executionId,
+                fromNodeId = fromNodeId,
+                fromConnectorId = fromConnectorId
+            )
 
             val messageEnqueued = mailbox.enqueue(message)
             if (!messageEnqueued) {
@@ -334,5 +369,34 @@ class ActiveGraph(
 
         // Return only the target entries that correspond to tool definitions
         return targetInfo.filter { it.first in toolDefinitionNames }
+    }
+
+    private fun enqueueDirect(
+        targetNodeId: String,
+        toConnectorId: String,
+        payload: NodePayload,
+        executionId: String,
+        fromNodeId: String?,
+        fromConnectorId: String?
+    ) {
+        val mailbox = mailboxes.computeIfAbsent(targetNodeId) { Mailbox() }
+        val message = MailboxMessage(
+            toConnectorId = toConnectorId,
+            payload = payload,
+            executionId = executionId,
+            fromNodeId = fromNodeId,
+            fromConnectorId = fromConnectorId
+        )
+
+        val enqueued = mailbox.enqueue(message)
+        if (!enqueued) {
+            logger.error("Failed to enqueue direct message to {} (execution {})", targetNodeId, executionId)
+            return
+        }
+
+        logger.debug("Enqueued direct message to {} (execution {}) from {}",
+            targetNodeId, executionId, fromNodeId)
+
+        scheduleNode(targetNodeId)
     }
 }

@@ -39,7 +39,9 @@ data class NodeInvocationContext(
     val executionId: String,
     val nodeId: String,
     val payload: NodePayload,
-    val graph: ActiveGraph
+    val graph: ActiveGraph,
+    val fromNodeId: String? = null,     // Used to send replies back to the origin node (feedback loops like HITL)
+    val fromConnectorId: String? = null
 )
 
 data class NodeDeactivationContext(
@@ -50,5 +52,17 @@ data class NodeDeactivationContext(
 // Node output interface used by nodes to send outputs back to the graph. Will be implemented by the ActiveGraph
 // to provide a way back for data.
 interface NodeOutput {
+    /**
+     * Send a payload to the specified output connector of this node.
+     */
     fun send(outputConnectorId: String, payload: NodePayload)
+
+    /**
+     * Send a reply back to the origin node that sent the input payload to this node.
+     * This method is used for feedback loops like Human-in-the-Loop (HITL) where a node needs to reply
+     * back to the node that sent the original request.
+     */
+    fun reply(payload: NodePayload) {
+        throw UnsupportedOperationException("reply not implemented")
+    }
 }

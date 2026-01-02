@@ -10,7 +10,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
-import java.util.*
+import java.util.UUID
 
 /**
  * RestInputNode registers a Ktor route at activation time using the RouteRegistrar.
@@ -58,12 +58,18 @@ class RestInputNode(
                 executionId = executionId,
                 nodeId = context.nodeId,
                 payload = RawPayload(body),
-                graph = context.graph
+                graph = context.graph,
+                fromNodeId = null,
+                fromConnectorId = null
             )
 
             val output = object : NodeOutput {
                 override fun send(outputConnectorId: String, payload: dev.tjpal.nodes.payload.NodePayload) {
                     context.graph.routeFromNode(context.nodeId, outputConnectorId, payload, executionId)
+                }
+
+                override fun reply(payload: dev.tjpal.nodes.payload.NodePayload) {
+                    logger.warn("Reply attempted on REST input handler for graphInstanceId={} nodeId={} executionId={}", context.graphInstanceId, context.nodeId, executionId)
                 }
             }
 

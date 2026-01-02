@@ -7,7 +7,9 @@ import java.util.concurrent.atomic.AtomicInteger
 data class MailboxMessage(
     val toConnectorId: String,
     val payload: NodePayload,
-    val executionId: String
+    val executionId: String,
+    val fromNodeId: String? = null,
+    val fromConnectorId: String? = null
 )
 
 /**
