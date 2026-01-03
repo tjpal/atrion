@@ -4,6 +4,9 @@ import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.logging.logger
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeStatus
+import dev.tjpal.model.ReviewDecision
+import dev.tjpal.model.ReviewRecord
+import dev.tjpal.model.ReviewStatus
 import dev.tjpal.model.StatusEntry
 import dev.tjpal.nodes.Node
 import dev.tjpal.nodes.NodeActivationContext
@@ -56,7 +59,8 @@ class HumanInTheLoopNode(
             graphInstanceId = context.graphInstanceId,
             executionId = context.executionId,
             nodeId = context.nodeId,
-            request = payload,
+            reviewInstructions = payload.instructions,
+            reviewDecisionDescription = payload.decisionDescription,
             timestamp = System.currentTimeMillis(),
             status = ReviewStatus.PENDING
         )
@@ -78,10 +82,10 @@ class HumanInTheLoopNode(
         val originalId = payload.originalReviewId
 
         try {
-            val decisionStatus = when (payload.status.uppercase()) {
-                "ACCEPTED" -> ReviewStatus.ACCEPTED
-                "DECLINED" -> ReviewStatus.DECLINED
-                else -> throw IllegalArgumentException("Unknown decision status: ${payload.status}")
+            val decisionStatus = when (payload.decision) {
+                ReviewDecision.ACCEPTED -> ReviewStatus.ACCEPTED
+                ReviewDecision.DECLINED -> ReviewStatus.DECLINED
+                ReviewDecision.COMMENTED -> ReviewStatus.COMMENTED
             }
 
             val updated = reviewRepository.updateDecision(originalId, decisionStatus, payload.reviewer, payload.comment)
@@ -95,7 +99,7 @@ class HumanInTheLoopNode(
             )
 
             if (updated.status == ReviewStatus.ACCEPTED) {
-                output.send("out", RawPayload(updated.request.instructions))
+                output.send("out", RawPayload(updated.reviewInstructions))
 
                 logger.info("HumanInTheLoopNode forwarded accepted review {} as RawPayload for executionId={} nodeId={}", originalId, context.executionId, context.nodeId)
             } else {

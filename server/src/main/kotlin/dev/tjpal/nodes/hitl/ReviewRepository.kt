@@ -1,6 +1,8 @@
 package dev.tjpal.nodes.hitl
 
 import dev.tjpal.logging.logger
+import dev.tjpal.model.ReviewRecord
+import dev.tjpal.model.ReviewStatus
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,8 +23,8 @@ class ReviewRepository @Inject constructor() {
         return record.reviewId
     }
 
-    fun get(reviewId: String): ReviewRecord {
-        return store[reviewId] ?: throw IllegalArgumentException("No review with id: $reviewId")
+    fun get(reviewId: String): ReviewRecord? {
+        return store[reviewId]
     }
 
     fun listAll(status: ReviewStatus? = null): List<ReviewRecord> =

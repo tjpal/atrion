@@ -1,12 +1,13 @@
 package dev.tjpal.nodes.payload
 
+import dev.tjpal.model.ReviewDecision
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 @Serializable
 data class ReviewDecisionPayload(
     val originalReviewId: String,
-    val status: String,
+    val decision: ReviewDecision,
     val reviewer: String? = null,
     val comment: String? = null
 ) : NodePayload {

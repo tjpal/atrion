@@ -6,6 +6,7 @@ import dev.tjpal.api.route.definitionsRoute
 import dev.tjpal.api.route.executionsRoute
 import dev.tjpal.api.route.graphsRoute
 import dev.tjpal.api.route.outputsRoute
+import dev.tjpal.api.route.reviewsRoute
 import dev.tjpal.api.route.statusesRoute
 import dev.tjpal.config.Config
 import dev.tjpal.graph.ActiveGraphRepository
@@ -13,6 +14,7 @@ import dev.tjpal.graph.ExecutionOutputStore
 import dev.tjpal.graph.GraphDefinitionRepository
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.nodes.NodeRepository
+import dev.tjpal.nodes.hitl.ReviewRepository
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -39,6 +41,7 @@ class App @Inject constructor(
     private val graphRepository: GraphDefinitionRepository,
     private val activeGraphRepository: ActiveGraphRepository,
     private val executionOutputStore: ExecutionOutputStore,
+    private val reviewRepository: ReviewRepository,
     private val statusRegistry: StatusRegistry
 ) {
     fun run() {
@@ -61,7 +64,14 @@ class App @Inject constructor(
                 }
             },
             module = {
-                module(nodeRepository, graphRepository, activeGraphRepository, executionOutputStore, statusRegistry)
+                module(
+                    nodeRepository,
+                    graphRepository,
+                    activeGraphRepository,
+                    executionOutputStore,
+                    reviewRepository,
+                    statusRegistry
+                )
             }
         )
 
@@ -88,6 +98,7 @@ fun Application.module(
     graphRepository: GraphDefinitionRepository,
     activeGraphRepository: ActiveGraphRepository,
     executionOutputStore: ExecutionOutputStore,
+    reviewRepository: ReviewRepository,
     statusRegistry: StatusRegistry
 ) {
     val defaultJson = Json {
@@ -113,5 +124,6 @@ fun Application.module(
         executionsRoute(graphRepository, activeGraphRepository)
         outputsRoute(executionOutputStore)
         statusesRoute(statusRegistry, defaultJson)
+        reviewsRoute(reviewRepository, activeGraphRepository, defaultJson)
     }
 }

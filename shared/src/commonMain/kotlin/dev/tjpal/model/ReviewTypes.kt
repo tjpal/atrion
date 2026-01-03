@@ -1,11 +1,10 @@
-package dev.tjpal.nodes.hitl
-
-import dev.tjpal.nodes.payload.ReviewRequestPayload
+package dev.tjpal.model
 
 enum class ReviewStatus {
     PENDING,
     ACCEPTED,
-    DECLINED
+    DECLINED,
+    COMMENTED,
 }
 
 data class ReviewRecord(
@@ -13,7 +12,8 @@ data class ReviewRecord(
     val graphInstanceId: String,
     val executionId: String,
     val nodeId: String,
-    val request: ReviewRequestPayload,
+    val reviewInstructions: String,
+    val reviewDecisionDescription: String,
     val timestamp: Long,
     var status: ReviewStatus,
     var reviewer: String? = null,

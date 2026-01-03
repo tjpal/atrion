@@ -334,6 +334,36 @@ class ActiveGraph(
         routeOutput(fromNodeId, fromConnectorId, payload, executionId)
     }
 
+    /**
+     * Deliver a payload directly into a specific node mailbox. This can be used by external systems
+     * (e.g. REST handlers) to inject a NodePayload into a running graph execution. The method will
+     * enqueue the message and ensure the node processing worker is scheduled.
+     */
+    fun deliverToNode(
+        targetNodeId: String,
+        toConnectorId: String,
+        payload: NodePayload,
+        executionId: String,
+        fromNodeId: String? = null,
+        fromConnectorId: String? = null
+    ) {
+        if (stopped.get()) {
+            logger.warn("Attempted to deliver to node {} on stopped graph execution {}", targetNodeId, id)
+            return
+        }
+
+        logger.debug("Delivering external payload to node {} connector {} execution {}", targetNodeId, toConnectorId, executionId)
+
+        enqueueDirect(
+            targetNodeId = targetNodeId,
+            toConnectorId = toConnectorId,
+            payload = payload,
+            executionId = executionId,
+            fromNodeId = fromNodeId,
+            fromConnectorId = fromConnectorId
+        )
+    }
+
     fun getAttachedToolDefinitionNames(nodeId: String): List<String> {
         val outgoing = graphDefinition.edges.filter { it.fromNodeId == nodeId }
 
