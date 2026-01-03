@@ -6,9 +6,6 @@ import kotlinx.serialization.Serializable
 enum class NodeType { INPUT, OUTPUT, PROCESSOR, TOOL, MONITOR }
 
 @Serializable
-enum class ConnectorSchema { TEXT, AUDIO, JSON }
-
-@Serializable
 data class ConnectorDefinition(
     val id: String,
     val label: String,

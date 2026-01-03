@@ -4,7 +4,6 @@ import dev.tjpal.ai.LLM
 import dev.tjpal.ai.tools.ToolRegistry
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.model.ConnectorDefinition
-import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeType
@@ -30,9 +29,9 @@ class LLMProcessingNodeFactory @Inject constructor(
             category = "Processing",
             description = "Passes input text to a Language Model and returns the response.",
             icon = resourceEncoder.encodeResourceToBase64("llm.png"),
-            inputConnectors = listOf(ConnectorDefinition(id = "in", label = "In", schema = ConnectorSchema.TEXT)),
-            outputConnectors = listOf(ConnectorDefinition(id = "text_out", label = "Out", schema = ConnectorSchema.TEXT)),
-            toolConnectors = listOf(ConnectorDefinition(id = "tool", label = "Tool", schema = ConnectorSchema.JSON)),
+            inputConnectors = listOf(ConnectorDefinition(id = LLMProcessingNode.INPUT_CONNECTOR_ID, label = "In")),
+            outputConnectors = listOf(ConnectorDefinition(id = LLMProcessingNode.OUTPUT_CONNECTOR_ID, label = "Out")),
+            toolConnectors = listOf(ConnectorDefinition(id = "tool", label = "Tool")),
             debugConnectors = emptyList(),
             parameters = listOf(ParameterDefinition(
                 name = "Prompt",

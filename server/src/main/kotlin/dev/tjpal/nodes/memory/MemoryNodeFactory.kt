@@ -2,7 +2,6 @@ package dev.tjpal.nodes.memory
 
 import dev.tjpal.ai.tools.ToolRegistry
 import dev.tjpal.model.ConnectorDefinition
-import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeType
@@ -34,7 +33,7 @@ class MemoryNodeFactory @Inject constructor(
             icon = encoder.encodeResourceToBase64("memory-tool.png"),
             inputConnectors = emptyList(),
             outputConnectors = emptyList(),
-            toolConnectors = listOf(ConnectorDefinition(id = "tool", label = "Tool", schema = ConnectorSchema.JSON)),
+            toolConnectors = listOf(ConnectorDefinition(id = "tool", label = "Tool")),
             debugConnectors = emptyList(),
             parameters = emptyList()
         )

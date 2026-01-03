@@ -6,6 +6,7 @@ import dagger.multibindings.IntoMap
 import dev.tjpal.nodes.jira.JiraPollingNodeFactory
 import dev.tjpal.nodes.jira.JiraToolNodeFactory
 import dev.tjpal.nodes.memory.MemoryNodeFactory
+import dev.tjpal.nodes.hitl.HumanInTheLoopNodeFactory
 
 @Module
 abstract class NodeModule {
@@ -38,4 +39,9 @@ abstract class NodeModule {
     @IntoMap
     @NodeFactoryKey("MemoryTool")
     abstract fun bindMemoryNodeFactory(factory: MemoryNodeFactory): NodeFactory
+
+    @Binds
+    @IntoMap
+    @NodeFactoryKey("HumanInTheLoop")
+    abstract fun bindHumanInTheLoopNodeFactory(factory: HumanInTheLoopNodeFactory): NodeFactory
 }

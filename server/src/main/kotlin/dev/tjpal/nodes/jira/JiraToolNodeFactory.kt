@@ -3,7 +3,6 @@ package dev.tjpal.nodes.jira
 import dev.tjpal.ai.tools.ToolRegistry
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.model.ConnectorDefinition
-import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeType
@@ -42,7 +41,7 @@ class JiraToolNodeFactory @Inject constructor(
             icon = resourceEncoder.encodeResourceToBase64("jira-tool.png"),
             inputConnectors = emptyList(),
             outputConnectors = emptyList(),
-            toolConnectors = listOf(ConnectorDefinition(id = "tool", label = "Tool", schema = ConnectorSchema.JSON)),
+            toolConnectors = listOf(ConnectorDefinition(id = "tool", label = "Tool")),
             debugConnectors = emptyList(),
             parameters = listOf(
                 ParameterDefinition(

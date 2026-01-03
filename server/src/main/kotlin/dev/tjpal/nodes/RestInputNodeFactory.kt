@@ -2,7 +2,6 @@ package dev.tjpal.nodes
 
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.model.ConnectorDefinition
-import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeType
@@ -25,7 +24,7 @@ class RestInputNodeFactory @Inject constructor(
             description = "Node that registers for REST inputs",
             icon = imageEncoder.encodeResourceToBase64("rest-input.png"),
             inputConnectors = emptyList(),
-            outputConnectors = listOf(ConnectorDefinition(id = "out", label = "Out", schema = ConnectorSchema.TEXT)),
+            outputConnectors = listOf(ConnectorDefinition(id = "out", label = "Out")),
             toolConnectors = emptyList(),
             debugConnectors = emptyList(),
             parameters = listOf(

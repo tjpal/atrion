@@ -2,7 +2,6 @@ package dev.tjpal.nodes.jira
 
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.model.ConnectorDefinition
-import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeType
@@ -29,7 +28,7 @@ class JiraPollingNodeFactory @Inject constructor(
             description = "Polls a Jira server periodically and emits new issue keys as they are created.",
             icon = encoder.encodeResourceToBase64("jira-polling.png"),
             inputConnectors = emptyList(),
-            outputConnectors = listOf(ConnectorDefinition(id = "out", label = "Out", schema = ConnectorSchema.TEXT)),
+            outputConnectors = listOf(ConnectorDefinition(id = "out", label = "Out")),
             toolConnectors = emptyList(),
             debugConnectors = emptyList(),
             parameters = listOf(

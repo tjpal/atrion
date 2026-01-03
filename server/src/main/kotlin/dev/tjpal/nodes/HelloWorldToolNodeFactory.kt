@@ -2,7 +2,6 @@ package dev.tjpal.nodes
 
 import dev.tjpal.ai.tools.ToolRegistry
 import dev.tjpal.model.ConnectorDefinition
-import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeType
@@ -28,7 +27,7 @@ class HelloWorldToolNodeFactory @Inject constructor(
             icon = resourceEncoder.encodeResourceToBase64("placeholder-1.png"),
             inputConnectors = emptyList(),
             outputConnectors = emptyList(),
-            toolConnectors =  listOf(ConnectorDefinition(id = "tool", label = "Tool", schema = ConnectorSchema.JSON)),
+            toolConnectors =  listOf(ConnectorDefinition(id = "tool", label = "Tool")),
             debugConnectors = emptyList(),
             parameters = emptyList()
         )

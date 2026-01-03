@@ -3,7 +3,6 @@ package dev.tjpal.nodes
 import dev.tjpal.graph.ExecutionOutputStore
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.model.ConnectorDefinition
-import dev.tjpal.model.ConnectorSchema
 import dev.tjpal.model.NodeDefinition
 import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeType
@@ -24,7 +23,7 @@ class OutputSinkNodeFactory @Inject constructor(
             category = "Output",
             description = "Stores textual outputs in-memory for synchronous retrieval",
             icon = imageResourceEncoder.encodeResourceToBase64("rest-output.png"),
-            inputConnectors = listOf(ConnectorDefinition(id = "in", label = "In", schema = ConnectorSchema.TEXT)),
+            inputConnectors = listOf(ConnectorDefinition(id = "in", label = "In")),
             outputConnectors = emptyList(),
             toolConnectors = emptyList(),
             debugConnectors = emptyList(),
