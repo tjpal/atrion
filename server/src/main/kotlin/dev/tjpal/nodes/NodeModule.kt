@@ -7,6 +7,7 @@ import dev.tjpal.nodes.jira.JiraPollingNodeFactory
 import dev.tjpal.nodes.jira.JiraToolNodeFactory
 import dev.tjpal.nodes.memory.MemoryNodeFactory
 import dev.tjpal.nodes.hitl.HumanInTheLoopNodeFactory
+import dev.tjpal.nodes.multiplexer.MultiplexerNodeFactory
 
 @Module
 abstract class NodeModule {
@@ -44,4 +45,9 @@ abstract class NodeModule {
     @IntoMap
     @NodeFactoryKey("HumanInTheLoop")
     abstract fun bindHumanInTheLoopNodeFactory(factory: HumanInTheLoopNodeFactory): NodeFactory
+
+    @Binds
+    @IntoMap
+    @NodeFactoryKey("Multiplexer")
+    abstract fun bindMultiplexerNodeFactory(factory: MultiplexerNodeFactory): NodeFactory
 }

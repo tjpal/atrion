@@ -401,6 +401,17 @@ class ActiveGraph(
         return PayloadTypeToClass.toClass(targetInputConnector.preferredInputType)
     }
 
+    /**
+     * Returns true if the given output connector (identified by fromNodeId and fromConnectorId)
+     * has at least one outgoing target in the adjacency map. This can be used by nodes to avoid
+     * creating or sending payloads for unconnected connectors.
+     */
+    fun isConnectorConnected(fromNodeId: String, fromConnectorId: String): Boolean {
+        val key = Pair(fromNodeId, fromConnectorId)
+        val targets = adjacency[key]
+        return targets != null && targets.isNotEmpty()
+    }
+
     private fun enqueueDirect(
         targetNodeId: String,
         toConnectorId: String,
