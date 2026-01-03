@@ -1,5 +1,8 @@
 package dev.tjpal.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class ReviewStatus {
     PENDING,
     ACCEPTED,
@@ -7,6 +10,7 @@ enum class ReviewStatus {
     COMMENTED,
 }
 
+@Serializable
 data class ReviewRecord(
     val reviewId: String,
     val graphInstanceId: String,
