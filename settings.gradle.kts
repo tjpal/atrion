@@ -37,6 +37,7 @@ plugins {
 }
 
 include(":composeApp")
+include(":atrion-ingress")
 include(":server")
 include(":server:cli")
 include(":shared")
