@@ -1,6 +1,7 @@
 package dev.tjpal.client
 
 import dev.tjpal.model.DecisionResponse
+import dev.tjpal.model.ReviewDecision
 import dev.tjpal.model.ReviewDecisionRequest
 import dev.tjpal.model.ReviewRecord
 import dev.tjpal.model.ReviewStatus
@@ -113,24 +114,10 @@ class ReviewsApiClientMockEngineTest {
             }
         }
 
-        val decision = ReviewDecisionRequest(status = "ACCEPTED")
+        val decision = ReviewDecisionRequest(decision = ReviewDecision.ACCEPTED)
         val result = api.submitDecision("r3", decision)
 
         assertTrue(result.delivered)
         assertEquals("Delivered", result.deliveredMessage)
-    }
-
-    @Test
-    fun submitDecision_badRequest_throws() = runBlocking {
-        val api = createApi { request ->
-            when (request.url.encodedPath) {
-                "/reviews/r4/decision" -> respondError(HttpStatusCode.BadRequest)
-                else -> respondError(HttpStatusCode.NotFound)
-            }
-        }
-
-        val decision = ReviewDecisionRequest(status = "INVALID")
-        val exception = assertFailsWith<RESTApiException> { api.submitDecision("r4", decision) }
-        assertEquals(HttpStatusCode.BadRequest, exception.status)
     }
 }

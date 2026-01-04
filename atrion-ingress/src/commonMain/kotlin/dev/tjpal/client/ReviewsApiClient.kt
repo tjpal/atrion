@@ -26,20 +26,9 @@ class ReviewsApiClient(private val client: HttpClient, private val baseUrl: Stri
             append("$baseUrl/reviews")
             var firstQuery = true
 
-            if (!graphInstanceId.isNullOrBlank()) {
-                append(if (firstQuery) '?' else '&')
-                append("graphInstanceId=")
-                append(graphInstanceId)
-                firstQuery = false
-            }
-
-            if (status != null) {
-                append(if (firstQuery) '?' else '&')
-                append("status=")
-                append(status.name)
-            }
         }
 
+        println("ReviewsApiClient.listReviews: url=$url")
         val response: HttpResponse = client.get(url)
 
         if (!response.status.isSuccess()) {

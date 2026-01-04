@@ -52,6 +52,7 @@ kotlin {
             implementation(libs.ktor.client.mock)
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }

@@ -1,6 +1,8 @@
 package dev.tjpal.viewmodel
 
 import androidx.lifecycle.ViewModel
+import dev.tjpal.model.ReviewDecision
+import dev.tjpal.model.ReviewDecisionRequest
 import dev.tjpal.model.ReviewRecord
 import dev.tjpal.repo.ReviewRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -41,6 +43,24 @@ class ReviewViewModel(
         scope.launch {
             _state.value = ReviewUiState.Loading
             try {
+                repository.refresh()
+                val list = repository.listReviews()
+                _state.value = ReviewUiState.Ready(list)
+            } catch (t: Throwable) {
+                _state.value = ReviewUiState.Error(t)
+            }
+        }
+    }
+
+    /**
+     * Submit a decision for a given review id.
+     */
+    fun submitDecision(id: String, decision: ReviewDecision, reviewComment: String) {
+        scope.launch {
+            try {
+                val req = ReviewDecisionRequest(decision = decision, comment = reviewComment)
+                repository.submitDecision(id, req)
+
                 repository.refresh()
                 val list = repository.listReviews()
                 _state.value = ReviewUiState.Ready(list)
