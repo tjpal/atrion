@@ -5,6 +5,7 @@ import dagger.Module
 import dagger.multibindings.IntoMap
 import dev.tjpal.nodes.jira.JiraPollingNodeFactory
 import dev.tjpal.nodes.jira.JiraToolNodeFactory
+import dev.tjpal.nodes.jira.JiraWriteToolNodeFactory
 import dev.tjpal.nodes.memory.MemoryNodeFactory
 import dev.tjpal.nodes.hitl.HumanInTheLoopNodeFactory
 import dev.tjpal.nodes.multiplexer.MultiplexerNodeFactory
@@ -35,6 +36,11 @@ abstract class NodeModule {
     @IntoMap
     @NodeFactoryKey("JiraTool")
     abstract fun bindJiraToolNodeFactory(factory: JiraToolNodeFactory): NodeFactory
+
+    @Binds
+    @IntoMap
+    @NodeFactoryKey("JiraWriteTool")
+    abstract fun bindJiraWriteToolNodeFactory(factory: JiraWriteToolNodeFactory): NodeFactory
 
     @Binds
     @IntoMap
