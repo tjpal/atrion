@@ -1,22 +1,17 @@
 package dev.tjpal.prompt
 
 import dev.tjpal.config.Config
-import dev.tjpal.filesystem.DefaultFileSystemService
 import dev.tjpal.filesystem.FileSystemService
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
 import io.mockk.verify
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class FileSystemPromptsRepositoryTest {
     private lateinit var tmpDir: Path
@@ -35,15 +30,13 @@ class FileSystemPromptsRepositoryTest {
 
     @Test
     fun testGetPromptReadsFreshEachCall() {
-        val config = mockk<Config>(relaxed = true)
-        every { config.storageDirectory } returns tmpDir.toString()
-
         val fsMock = mockk<FileSystemService>(relaxed = true)
-
         val promptsDir = tmpDir.resolve("prompts")
 
-        every { fsMock.getPath(config.storageDirectory, "prompts") } returns promptsDir
-        every { fsMock.createDirectories(promptsDir) } answers { Files.createDirectories(promptsDir) }
+        val config = mockk<Config>(relaxed = true)
+        every { config.promptDirectories } returns listOf(promptsDir.toString())
+
+        every { fsMock.getPath(promptsDir.toString())} returns promptsDir
 
         val promptFile = promptsDir.resolve("my_prompt")
 
@@ -65,13 +58,13 @@ class FileSystemPromptsRepositoryTest {
 
     @Test
     fun testGetPromptNotFoundThrows() {
-        val config = mockk<Config>(relaxed = true)
-        every { config.storageDirectory } returns tmpDir.toString()
-
         val fsMock = mockk<FileSystemService>(relaxed = true)
         val promptsDir = tmpDir.resolve("prompts")
 
-        every { fsMock.getPath(config.storageDirectory, "prompts") } returns promptsDir
+        val config = mockk<Config>(relaxed = true)
+        every { config.promptDirectories } returns listOf(promptsDir.toString())
+
+        every { fsMock.getPath(promptsDir.toString()) } returns promptsDir
         every { fsMock.createDirectories(promptsDir) } answers { Files.createDirectories(promptsDir) }
 
         val missing = promptsDir.resolve("does_not_exist")
@@ -82,37 +75,5 @@ class FileSystemPromptsRepositoryTest {
         assertFailsWith<IllegalArgumentException> {
             repo.getPrompt("does_not_exist")
         }
-    }
-
-    @Test
-    fun testPutListAndDelete() {
-        val config = mockk<Config>(relaxed = true)
-        every { config.storageDirectory } returns tmpDir.toString()
-
-        val realFs = DefaultFileSystemService()
-        val fsSpy = spyk(realFs)
-
-        val repo = FileSystemPromptsRepository(config, fsSpy)
-
-        val storedName = repo.putPrompt("greeting-1", "Hello World")
-        assertTrue(storedName.isNotBlank())
-
-        val promptsDir = Paths.get(config.storageDirectory, "prompts")
-        val expectedPath = promptsDir.resolve(storedName)
-
-        assertTrue(Files.exists(expectedPath))
-
-        val names = repo.listPromptNames()
-        assertTrue(names.contains(storedName))
-        assertTrue(repo.exists(storedName))
-
-        val content = repo.getPrompt(storedName)
-        assertEquals("Hello World", content)
-
-        val deleted = repo.deletePrompt(storedName)
-        assertTrue(deleted)
-        assertFalse(repo.exists(storedName))
-
-        verify { fsSpy.write(expectedPath, any()) }
     }
 }

@@ -13,16 +13,6 @@ interface PromptsRepository {
     fun getPrompt(name: String): String
 
     /**
-     * Store or overwrite a prompt. Returns the sanitized filename used for storage.
-     */
-    fun putPrompt(name: String, content: String): String
-
-    /**
-     * Delete a prompt. Returns true if a file was deleted, false when not found.
-     */
-    fun deletePrompt(name: String): Boolean
-
-    /**
      * Returns whether the prompt exists.
      */
     fun exists(name: String): Boolean

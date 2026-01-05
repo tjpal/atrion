@@ -17,6 +17,7 @@ class ConfigLoader @Inject constructor(
         httpPort = 8081,
         udsPath = "/tmp/atrion.socket",
         storageDirectory = System.getProperty("user.home") + "/.atrion/graphs",
+        promptDirectories = listOf(System.getProperty("user.home") + "/.atrion/prompts"),
         openAICredentialPath = System.getProperty("user.home") + "/.atrion/cred",
         openAIGarbageCollectorPath = System.getProperty("user.home") + "/.atrion/openai_gc.jsonl",
         statusRetentionEntries = 10000,

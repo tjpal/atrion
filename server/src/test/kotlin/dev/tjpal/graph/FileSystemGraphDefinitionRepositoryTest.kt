@@ -63,6 +63,7 @@ class FileSystemGraphDefinitionRepositoryTest {
             httpPort = 8081,
             udsPath = "/tmp/atrion.socket",
             storageDirectory = baseDirectory.toString(),
+            promptDirectories = listOf(),
             openAICredentialPath = "",
             openAIGarbageCollectorPath = baseDirectory.resolve("openai-gc.log").toString(),
             statusRetentionEntries = 10,
