@@ -1,11 +1,11 @@
-package dev.tjpal.ai.openai
+package dev.tjpal.ai
 
 import com.openai.client.OpenAIClient
 import com.openai.client.okhttp.OpenAIOkHttpClient
 import com.openai.models.audio.AudioModel
 import com.openai.models.audio.transcriptions.TranscriptionCreateParams
-import dev.tjpal.ai.LLM
-import dev.tjpal.ai.RequestResponseChain
+import dev.tjpal.ai.openai.OpenAIRequestResponseChain
+import dev.tjpal.ai.openai.ResponsesGarbageCollector
 import dev.tjpal.ai.tools.ToolRegistry
 import dev.tjpal.config.Config
 import dev.tjpal.logging.logger
@@ -23,6 +23,7 @@ class OpenAILLM @Inject constructor(
 ) : LLM {
     private val logger = logger<OpenAILLM>()
     private val client = buildClientFromFile()
+    private val garbageCollectionStore = ResponsesGarbageCollector(Path(config.openAIGarbageCollectorPath))
 
     private fun buildClientFromFile(): OpenAIClient {
         try {
@@ -36,7 +37,7 @@ class OpenAILLM @Inject constructor(
     }
 
     override fun createResponseRequestChain(): RequestResponseChain {
-        val result = OpenAIRequestResponseChain(client, toolRegistry)
+        val result = OpenAIRequestResponseChain(client, toolRegistry, garbageCollectionStore)
         result.create()
 
         logger.debug("OpenAI RequestResponseChain created")
@@ -68,5 +69,9 @@ class OpenAILLM @Inject constructor(
         val text = transcription.text()
         logger.debug("Transcription completed: ${'$'}{text.take(100)}...")
         return text
+    }
+
+    override fun runResponseGarbageCollection() {
+        garbageCollectionStore.runResponseGarbageCollection(client)
     }
 }

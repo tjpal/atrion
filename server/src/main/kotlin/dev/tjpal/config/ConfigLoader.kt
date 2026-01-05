@@ -18,6 +18,7 @@ class ConfigLoader @Inject constructor(
         udsPath = "/tmp/atrion.socket",
         storageDirectory = System.getProperty("user.home") + "/.atrion/graphs",
         openAICredentialPath = System.getProperty("user.home") + "/.atrion/cred",
+        openAIGarbageCollectorPath = System.getProperty("user.home") + "/.atrion/openai_gc.jsonl",
         statusRetentionEntries = 10000,
         secretsDirectory = System.getProperty("user.home") + "/.atrion/secrets",
         secretsMasterKeyPath = System.getProperty("user.home") + "/.atrion/secrets_master_key",

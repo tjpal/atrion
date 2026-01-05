@@ -15,7 +15,8 @@ import kotlinx.serialization.json.JsonElement
 
 class OpenAIRequestResponseChain(
     private val client: OpenAIClient,
-    private val toolRegistry: ToolRegistry
+    private val toolRegistry: ToolRegistry,
+    private val gcStore: ResponsesGarbageCollector
 ) : RequestResponseChain() {
     private val logger = logger<OpenAIRequestResponseChain>()
     private var conversation: Conversation? = null
@@ -46,7 +47,12 @@ class OpenAIRequestResponseChain(
                 throw IllegalStateException(msg, e)
             }
 
-            responseIDs.add(lastApiResponse.id())
+            val responseId = lastApiResponse.id()
+            responseIDs.add(responseId)
+
+            // Create an entry in the garbage collection store. The client code is not required to delete responses/conversations.
+            // Still, we would like to clear the backend entries at OpenAI.
+            gcStore.append(GarbageCollectionEntry(System.currentTimeMillis(), responseId, conversationID))
 
             logger.debug("Received response id={} conversation={}", lastApiResponse.id(), conversationID)
 
@@ -72,24 +78,33 @@ class OpenAIRequestResponseChain(
 
         logger.debug("OpenAIRequestResponseChain: Deleting responses for conversation {}", conversationID)
 
+        val successfullyDeletedResponses = mutableSetOf<String>()
+
         responseIDs.forEach { responseID ->
             logger.info("OpenAIRequestResponseChain: Deleting response {}", responseID)
 
             try {
                 client.responses().delete(responseID)
+                successfullyDeletedResponses.add(responseID)
             } catch (e: Exception) {
                 logger.error("Failed to delete response {}", responseID, e)
-                // Continue for now. Not much we can do ...
             }
         }
 
-        logger.info("OpenAIRequestResponseChain: Deleting conversation {}", conversationID)
+        gcStore.removeEntries(successfullyDeletedResponses, conversationID)
+
+        if(successfullyDeletedResponses.size != responseIDs.size) {
+            // In case the deletion of a response failed, there is no point in deleting the conversation.
+            // Stop here. The garbage collector will take care of the pending entries next time it runs.
+            return
+        }
 
         try {
+            logger.info("OpenAIRequestResponseChain: Deleting conversation {}", conversationID)
             client.conversations().delete(conversationID)
+            logger.debug("Conversation {} deleted successfully", conversationID)
         } catch (e: Exception) {
             logger.error("Failed to delete conversation {}", conversationID, e)
-            // Continue
         }
 
         this.conversation = null

@@ -8,6 +8,7 @@ data class Config(
     val httpPort: Int,
     val udsPath: String,
     val storageDirectory: String,
+    val openAIGarbageCollectorPath: String,
     val openAICredentialPath: String,
     val statusRetentionEntries: Int,
     val secretsDirectory: String,
