@@ -26,15 +26,18 @@ import kotlinx.serialization.Serializable
 data class ReviewRequestPayload(
     @JsonPropertyDescription(
         """
-        This string will be passed to a LLM to perform the action that was decided by the human reviewer.
+        These instructions will be passed to a LLM to perform the actions you decided. 
         It should contain clear, specific and actionable instructions for the LLM to follow.
         Assume the LLM has all necessary tools to perform the action.
+        For the human review this part is optional. Ensure it targets only the actions you want the LLM to perform upon approval.
         """
     )
     val instructions: String,
     @JsonPropertyDescription(
         """
         A clear, pertinent and apposite description of the decision the human reviewer must make. The human reviewer will either approve or decline the request.
+        When approved, the "instructions" will be sent to a LLM for further processing. This description will NOT be sent to the LLM.
+        Ensure it contains all relevant context for the human reviewer to make an informed decision.
         """
     )
     val decisionDescription: String
