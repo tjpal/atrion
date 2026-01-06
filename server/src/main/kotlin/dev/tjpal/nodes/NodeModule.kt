@@ -9,6 +9,7 @@ import dev.tjpal.nodes.jira.JiraWriteToolNodeFactory
 import dev.tjpal.nodes.memory.MemoryNodeFactory
 import dev.tjpal.nodes.hitl.HumanInTheLoopNodeFactory
 import dev.tjpal.nodes.multiplexer.MultiplexerNodeFactory
+import dev.tjpal.nodes.machineinloop.MachineInTheLoopNodeFactory
 
 @Module
 abstract class NodeModule {
@@ -56,4 +57,9 @@ abstract class NodeModule {
     @IntoMap
     @NodeFactoryKey("Multiplexer")
     abstract fun bindMultiplexerNodeFactory(factory: MultiplexerNodeFactory): NodeFactory
+
+    @Binds
+    @IntoMap
+    @NodeFactoryKey("MachineInTheLoop")
+    abstract fun bindMachineInTheLoopNodeFactory(factory: MachineInTheLoopNodeFactory): NodeFactory
 }
