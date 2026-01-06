@@ -9,6 +9,7 @@ import dev.tjpal.model.NodeParameters
 import dev.tjpal.model.NodeType
 import dev.tjpal.model.ParameterDefinition
 import dev.tjpal.model.ParameterType
+import dev.tjpal.prompt.PromptsRepository
 import dev.tjpal.utilities.ImageResourceEncoder
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -17,6 +18,7 @@ class LLMProcessingNodeFactory @Inject constructor(
     private val llm: LLM,
     private val statusRegistry: StatusRegistry,
     private val toolRegistry: ToolRegistry,
+    private val promptsRepository: PromptsRepository,
     private val json: Json
 ) : NodeFactory {
     override fun definition(): NodeDefinition {
@@ -43,6 +45,12 @@ class LLMProcessingNodeFactory @Inject constructor(
     }
 
     override fun createNode(parameters: NodeParameters): Node {
-        return LLMProcessingNode(parameters, llm, statusRegistry, toolRegistry, json)
+        return LLMProcessingNode(
+            parameters = parameters,
+            llm = llm, statusRegistry,
+            promptsRepository = promptsRepository,
+            toolRegistry = toolRegistry,
+            json = json
+        )
     }
 }

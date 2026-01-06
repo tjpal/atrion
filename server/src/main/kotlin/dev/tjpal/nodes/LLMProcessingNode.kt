@@ -11,6 +11,7 @@ import dev.tjpal.model.NodeStatus
 import dev.tjpal.model.StatusEntry
 import dev.tjpal.nodes.payload.NodePayload
 import dev.tjpal.nodes.payload.PayloadTypeToClass
+import dev.tjpal.prompt.PromptsRepository
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
@@ -20,6 +21,7 @@ class LLMProcessingNode(
     private val parameters: NodeParameters,
     private val llm: LLM,
     private val statusRegistry: StatusRegistry,
+    private val promptsRepository: PromptsRepository,
     private val toolRegistry: ToolRegistry,
     private val json: Json
 ) : Node {
@@ -41,7 +43,7 @@ class LLMProcessingNode(
             val chain = llm.createResponseRequestChain()
 
             val promptTemplate = parameters.values["Prompt"] ?: "{{input}}"
-            val resolvedPrompt = promptTemplate.replace("{{input}}", context.payload.asString())
+            val resolvedPrompt = resolvePrompt(context.payload.asString())
 
             // Gather attached tools and their node-level parameters (serialized into JSON elements)
             val attached = context.graph.getAttachedToolDefinitionsWithParameters(context.nodeId)
@@ -95,6 +97,29 @@ class LLMProcessingNode(
             // For now just pass the exception message as error output. Later we turn this into a more user-friendly message.
             sendStatusEntry(NodeStatus.ERROR, null, null, e.message, context)
         }
+    }
+
+    private fun resolvePrompt(input: String): String {
+        var prompt = parameters.values["Prompt"] ?: "{{input}}"
+
+        if(prompt.startsWith("prompt://")) {
+            logger.info("Resolving prompt from repository for id={}", prompt)
+            val promptId = prompt.removePrefix("prompt://")
+            val promptTemplate = promptsRepository.getPrompt(promptId)
+
+            if(promptTemplate == null) {
+                logger.error("Prompt not found for id={}. Falling back to event payload.", promptId)
+                prompt = "{{input}}"
+            } else {
+                logger.info("Using prompt from repository for id={}", promptId)
+                prompt = promptTemplate.replace("{{input}}", input)
+            }
+        } else {
+            logger.info("Using prompt from node parameters or event payload.")
+            return prompt.replace("{{input}}", input)
+        }
+
+        return prompt
     }
 
     private fun sendStatusEntry(
