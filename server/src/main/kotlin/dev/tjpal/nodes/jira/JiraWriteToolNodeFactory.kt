@@ -33,7 +33,7 @@ class JiraWriteToolNodeFactory @Inject constructor(
 
         return NodeDefinition(
             id = toolName,
-            displayedName = "Jira Write Tool",
+            displayedName = "Jira Tool (write)",
             type = NodeType.TOOL,
             category = "Tool",
             description = "Tool that performs write operations on a Jira issue (add comments / set fields)",

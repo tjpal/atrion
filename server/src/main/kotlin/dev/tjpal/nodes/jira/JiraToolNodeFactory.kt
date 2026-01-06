@@ -34,7 +34,7 @@ class JiraToolNodeFactory @Inject constructor(
 
         return NodeDefinition(
             id = "JiraTool",
-            displayedName = "Jira Tool",
+            displayedName = "Jira Tool (read)",
             type = NodeType.TOOL,
             category = "Tool",
             description = "Tool that fetches a single Jira issue and returns compacted output (main attributes, comments, history)",
