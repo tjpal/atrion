@@ -2,27 +2,41 @@ package dev.tjpal.nodes
 
 import dev.tjpal.api.route.RegistrationToken
 import dev.tjpal.api.route.RouteRegistrarHolder
+import dev.tjpal.graph.ExecutionResponseAwaiter
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.logging.logger
 import dev.tjpal.model.NodeParameters
+import dev.tjpal.model.RESTRequest
+import dev.tjpal.model.RESTResponse
 import dev.tjpal.nodes.payload.RawPayload
+import io.ktor.http.ContentType.Application
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receiveText
-import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.json.Json
 import java.util.UUID
 
 /**
  * RestInputNode registers a Ktor route at activation time using the RouteRegistrar.
  * The node exposes a "Path" parameter (e.g. "/api/some-end-point") that defines the HTTP
  * path to register. onActivate registers the route; onStop unregisters it.
+ *
+ * RestInputNode offers two modes:
+ * - Synchronous: The response contains the output of the execution. The node registers a waiter that is notified by the
+ *   OutputSinkNode when the output is sent, and the request handler waits for the notification before responding.
+ * - Asynchronous: The response is returned immediately after triggering the execution, and the client is expected to
+ *   pick up the output from the output sink in a separate call.
  */
 class RestInputNode(
     private val parameters: NodeParameters,
-    private val statusRegistry: StatusRegistry
+    private val statusRegistry: StatusRegistry,
 ) : Node {
     private val logger = logger<RestInputNode>()
     private var registrationToken: RegistrationToken? = null
+    private val globalResponseTimeout = 10L * 60L * 5L // 5 minutes
+    private val json = Json { ignoreUnknownKeys = true }
 
     override fun onActivate(context: NodeActivationContext) {
         logger.info("RestInputNode.onActivate graphInstanceId={} nodeId={}", context.graphInstanceId, context.nodeId)
@@ -51,39 +65,94 @@ class RestInputNode(
     private fun createRequestHandler(context: NodeActivationContext, normalizedPath: String): suspend (ApplicationCall) -> Unit = { call ->
         try {
             val body = runCatching { call.receiveText() }.getOrElse { "" }
-            val executionId = UUID.randomUUID().toString()
+            val request = json.decodeFromString<RESTRequest>(body)
+            val executionId = request.executionId ?: UUID.randomUUID().toString()
 
-            val invocation = NodeInvocationContext(
-                graphInstanceId = context.graphInstanceId,
-                executionId = executionId,
-                nodeId = context.nodeId,
-                payload = RawPayload(body),
-                graph = context.graph,
-                fromNodeId = null,
-                fromConnectorId = null
-            )
+            val invocation = createInvocation(context, body, executionId)
+            val output = createNodeOutput(context, executionId)
 
-            val output = object : NodeOutput {
-                override fun send(outputConnectorId: String, payload: dev.tjpal.nodes.payload.NodePayload) {
-                    context.graph.routeFromNode(context.nodeId, outputConnectorId, payload, executionId)
-                }
-
-                override fun reply(payload: dev.tjpal.nodes.payload.NodePayload) {
-                    logger.warn("Reply attempted on REST input handler for graphInstanceId={} nodeId={} executionId={}", context.graphInstanceId, context.nodeId, executionId)
-                }
+            if(request.synchronous) {
+                // We pick up the response from the output sink and send it back.
+                handleSynchronousPath(call, context, invocation, output, body, executionId)
+            } else {
+                // The client picks up the response from the output sink in a separate call.
+                onEvent(invocation, output)
+                respondWithSuccess(call, executionId, "request accepted")
             }
 
-            try {
-                this.onEvent(invocation, output)
-
-                call.respond(HttpStatusCode.Accepted, mapOf("executionId" to executionId))
-            } catch (e: Exception) {
-                logger.error("Error while handling dynamic route {}: {}", normalizedPath, e.message)
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to (e.message ?: "processing error")))
-            }
         } catch (e: Exception) {
             logger.error("Unexpected error in request handler for dynamic route {}: {}", normalizedPath, e.message)
-            try { call.respond(HttpStatusCode.InternalServerError) } catch (_: Exception) {}
+            respondWithError(call, executionId = "unknown", errorMessage = "internal server error")
+        }
+    }
+
+    private suspend fun handleSynchronousPath(
+        call: ApplicationCall,
+        context: NodeActivationContext,
+        invocation: NodeInvocationContext,
+        output: NodeOutput,
+        body: String,
+        executionId: String
+    ) {
+        val awaiter = ExecutionResponseAwaiter.registerAwaiter(executionId)
+
+        onEvent(invocation, output)
+
+        val result = withTimeoutOrNull(globalResponseTimeout) { awaiter.await() }
+
+        if (result != null) {
+            respondWithSuccess(call, executionId, result.payload)
+        } else {
+            ExecutionResponseAwaiter.cancelAwaiter(executionId)
+            respondWithError(call, executionId, "timeout")
+        }
+    }
+
+    private suspend fun respondWithSuccess(call: ApplicationCall, executionId: String, result: String) {
+        val response = RESTResponse(
+            executionId = executionId,
+            error = false,
+            payload = result
+        )
+
+        val json = Json.encodeToString(response)
+
+        call.respondText(text = json, contentType = Application.Json, status = HttpStatusCode.OK)
+    }
+
+    private suspend fun respondWithError(call: ApplicationCall, executionId: String, errorMessage: String) {
+        val response = RESTResponse(
+            executionId = executionId,
+            error = true,
+            payload = errorMessage
+        )
+
+        val json = Json.encodeToString(response)
+
+        call.respondText(text = json, contentType = Application.Json, status = HttpStatusCode.InternalServerError)
+    }
+
+    private fun createInvocation(context: NodeActivationContext, body: String, executionId: String): NodeInvocationContext {
+        return NodeInvocationContext(
+            graphInstanceId = context.graphInstanceId,
+            executionId = executionId,
+            nodeId = context.nodeId,
+            payload = RawPayload(body),
+            graph = context.graph,
+            fromNodeId = null,
+            fromConnectorId = null
+        )
+    }
+
+    private fun createNodeOutput(context: NodeActivationContext, executionId: String): NodeOutput {
+        return object : NodeOutput {
+            override fun send(outputConnectorId: String, payload: dev.tjpal.nodes.payload.NodePayload) {
+                context.graph.routeFromNode(context.nodeId, outputConnectorId, payload, executionId)
+            }
+
+            override fun reply(payload: dev.tjpal.nodes.payload.NodePayload) {
+                logger.warn("Reply attempted on REST input handler for graphInstanceId={} nodeId={} executionId={}", context.graphInstanceId, context.nodeId, executionId)
+            }
         }
     }
 

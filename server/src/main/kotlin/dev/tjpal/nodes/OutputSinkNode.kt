@@ -1,6 +1,8 @@
 package dev.tjpal.nodes
 
 import dev.tjpal.graph.ExecutionOutputStore
+import dev.tjpal.graph.ExecutionResponseAwaiter
+import dev.tjpal.graph.OutputRecord
 import dev.tjpal.graph.status.StatusRegistry
 import dev.tjpal.logging.logger
 import dev.tjpal.model.NodeParameters
@@ -22,11 +24,25 @@ class OutputSinkNode @Inject constructor(
     }
 
     override suspend fun onEvent(context: NodeInvocationContext, output: NodeOutput) {
-        executionOutputStore.appendOutput(
-            executionId = context.executionId,
-            nodeId = context.nodeId,
-            payload = context.payload.asString()
-        )
+        val record = OutputRecord(nodeId = context.nodeId, payload = context.payload.asString())
+
+        try {
+            val matchedInputCall = ExecutionResponseAwaiter.notifyOutput(context.executionId, record)
+
+            if (matchedInputCall) {
+                logger.debug("OutputSinkNode notified awaiter for executionId={} nodeId={}", context.executionId, context.nodeId)
+            } else {
+                logger.debug("OutputSinkNode no awaiter found for executionId={}, appending output to store", context.executionId)
+
+                executionOutputStore.appendOutput(
+                    executionId = context.executionId,
+                    nodeId = context.nodeId,
+                    payload = context.payload.asString()
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("OutputSinkNode: failed to notify awaiter for executionId={}: {}", context.executionId, e.message)
+        }
 
         sendStatusEntry(context.payload.asString(), context)
         logger.debug("OutputSinkNode appended output for executionId={} nodeId={} payload={}", context.executionId, context.nodeId, context.payload.asString())
