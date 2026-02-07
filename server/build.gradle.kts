@@ -40,6 +40,8 @@ dependencies {
     implementation(libs.jira.rest.core)
     implementation(libs.jira.fugue)
 
+    implementation(libs.anthropic)
+
     testImplementation(libs.kotlin.testJunit)
     testImplementation(libs.mockk)
 }

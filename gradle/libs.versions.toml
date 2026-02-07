@@ -18,6 +18,7 @@ slf4japi = "2.0.17"
 atomicfu = "0.29.0"
 jira-rest-api = "7.0.1"
 jira-fugue = "6.1.2"
+anthropic = "2.11.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -59,6 +60,8 @@ navigation-compose = { group = "org.jetbrains.androidx.navigation", name = "navi
 jira-rest-api = { module = "com.atlassian.jira:jira-rest-java-client-api", version.ref = "jira-rest-api" }
 jira-rest-core = { module = "com.atlassian.jira:jira-rest-java-client-core", version.ref = "jira-rest-api" }
 jira-fugue = { module = "io.atlassian.fugue:fugue", version.ref = "jira-fugue" }
+
+anthropic = { module = "com.anthropic:anthropic-java", version.ref = "anthropic" }
 
 [plugins]
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
