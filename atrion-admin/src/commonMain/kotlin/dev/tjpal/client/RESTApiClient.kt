@@ -1,11 +1,9 @@
 package dev.tjpal.client
 
-import dev.tjpal.model.ConnectorOutput
 import dev.tjpal.model.ExecutionStartRequest
 import dev.tjpal.model.GraphDefinition
 import dev.tjpal.model.GraphExecutionStatus
 import dev.tjpal.model.NodeDefinition
-import dev.tjpal.model.RestInputRequest
 import dev.tjpal.model.StatusEntry
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -107,31 +105,6 @@ class RESTApiClient(private val client: HttpClient, private val baseUrl: String,
         val response: HttpResponse = client.delete(url)
         if (response.status != HttpStatusCode.NoContent) {
             throw RESTApiException(response.status, "Failed to delete execution: ${response.status}")
-        }
-    }
-
-    suspend fun getExecutionOutputs(executionId: String): List<ConnectorOutput> {
-        val url = "$baseUrl/executions/$executionId/outputs"
-        val response: HttpResponse = client.get(url)
-        if (!response.status.isSuccess()) {
-            throw RESTApiException(response.status, "Failed to fetch outputs: ${response.status}")
-        }
-        return response.body()
-    }
-
-    suspend fun sendRestInput(graphInstanceId: String, nodeId: String, payload: String): String {
-        val url = "$baseUrl/rest-input"
-        val response: HttpResponse = client.post(url) {
-            contentType(ContentType.Application.Json)
-            setBody(RestInputRequest(graphInstanceId, nodeId, payload))
-        }
-        return when (response.status) {
-            HttpStatusCode.Accepted -> {
-                val map: Map<String, Any> = response.body()
-                map["executionId"] as? String
-                    ?: throw RESTApiException(response.status, "Missing execution id in response")
-            }
-            else -> throw RESTApiException(response.status, "Failed to send rest input: ${response.status}")
         }
     }
 

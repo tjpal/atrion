@@ -12,6 +12,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation(projects.atrionAdmin)
 
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.core)

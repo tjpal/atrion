@@ -28,6 +28,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(projects.shared)
+            implementation(projects.atrionAdmin)
 
             implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.core)
