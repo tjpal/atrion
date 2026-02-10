@@ -14,7 +14,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.shared)
+            api(projects.shared)
 
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.websockets)
