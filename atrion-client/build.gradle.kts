@@ -21,6 +21,12 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 tasks.test {
     useJUnitPlatform()
 }
